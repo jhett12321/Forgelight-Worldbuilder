@@ -1,7 +1,9 @@
 ﻿namespace WorldBuilder
 {
+    using UnityEngine;
     using Zenject;
 
+    [CreateAssetMenu(fileName = "AppConfig", menuName = "WorldBuilder/Application Configuration")]
     public class AppInstaller : ScriptableObjectInstaller
     {
         public string MaterialsAsset = "materials_3.xml";

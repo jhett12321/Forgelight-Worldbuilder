@@ -1,6 +1,7 @@
 ﻿namespace WorldBuilder
 {
     using Materials;
+    using Objects;
     using UnityEngine;
     using Zenject;
 
@@ -13,6 +14,9 @@
         {
             Container.Bind<AssetManager>().FromNew().AsSingle().NonLazy();
             Container.Bind<MaterialDefinitionManager>().FromNew().AsSingle().WithArguments(MaterialsAsset).NonLazy();
+
+            Container.Bind<ActorFactory>().FromNew().AsSingle().NonLazy();
+            Container.Bind<MeshFactory>().FromNew().AsSingle().NonLazy();
         }
     }
 }

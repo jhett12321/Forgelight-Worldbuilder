@@ -13,7 +13,7 @@
         // Dependencies
         [Inject] private AssetManager assetManager;
 
-        private readonly MaterialDefinitions materialDefinitions;
+        public readonly MaterialDefinitions materialDefinitions;
 
         public MaterialDefinitionManager(string materialsAsset)
         {

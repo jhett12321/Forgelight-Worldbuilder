@@ -6,6 +6,9 @@
     using System.Xml.Linq;
     using UnityEngine;
 
+    /// <summary>
+    /// Represents the Actor Definitions XML File.
+    /// </summary>
     public class Adr : IReadableAsset
     {
         public string Name { get; set; }

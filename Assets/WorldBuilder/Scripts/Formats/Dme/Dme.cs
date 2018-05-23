@@ -11,7 +11,10 @@
     using Utils.Cryptography;
     using Material = Dma.Material;
 
-    public class Model : IReadableAsset, IPoolable
+    /// <summary>
+    /// Represents a Forgelight Model (DME) file.
+    /// </summary>
+    public class Dme : IReadableAsset, IPoolable
     {
         public string Name { get; set; }
         public string DisplayName { get; set; }
@@ -49,7 +52,7 @@
         public List<BoneMapEntry> BoneMapEntries { get; private set; }
         #endregion
 
-        public Model()
+        public Dme()
         {
             TextureStrings = new List<string>();
             Materials = new List<Material>();

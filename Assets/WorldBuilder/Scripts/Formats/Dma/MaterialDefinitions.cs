@@ -1,39 +1,35 @@
-﻿namespace WorldBuilder
+﻿namespace WorldBuilder.Formats.Dma
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Xml.XPath;
-    using Formats.Dma;
-    using Formats.Dme;
-    using Zenject;
+    using Dme;
 
-    public class MaterialDefinitionManager
+    /// <summary>
+    /// Represents the materials_3.xml file.
+    /// </summary>
+    public class MaterialDefinitions : IReadableAsset
     {
-        [Inject] private AssetManager assetManager;
+        public Dictionary<uint, MaterialDefinition> Materials { get; } = new Dictionary<uint, MaterialDefinition>();
+        public Dictionary<uint, VertexLayout> VertexLayouts { get; } = new Dictionary<uint, VertexLayout>();
 
-        public Dictionary<uint, MaterialDefinition> MaterialDefinitions { get; }
-        public Dictionary<uint, VertexLayout>       VertexLayouts       { get; }
+        public string Name { get; set; }
+        public string DisplayName { get; set; }
 
-        public MaterialDefinitionManager(string materialsAsset)
+        public bool Deserialize(Stream stream)
         {
-            MaterialDefinitions = new Dictionary<uint, MaterialDefinition>();
-            VertexLayouts       = new Dictionary<uint, VertexLayout>();
-
-            using (MemoryStream materialsXML = assetManager.CreateAssetMemoryStreamByName("materials_3.xml"))
+            using (StreamReader streamReader = new StreamReader(stream))
             {
-                materialsXML.Position = 0;
+                string xmlDoc = streamReader.ReadToEnd();
 
-                using (StreamReader streamReader = new StreamReader(materialsXML))
+                using (StringReader stringReader = new StringReader(xmlDoc))
                 {
-                    string xmlDoc = streamReader.ReadToEnd();
-
-                    using (StringReader stringReader = new StringReader(xmlDoc))
-                    {
-                        LoadFromStringReader(stringReader);
-                    }
+                    LoadFromStringReader(stringReader);
                 }
             }
+
+            return true;
         }
 
         private void LoadFromStringReader(TextReader stringReader)
@@ -61,7 +57,7 @@
 
             // TODO: parameter groups
 
-            //material definitions
+            // material definitions
             LoadMaterialDefinitionsByXPathNavigator(navigator.Clone());
         }
 
@@ -82,16 +78,16 @@
             {
                 MaterialDefinition materialDefinition = MaterialDefinition.LoadFromXPathNavigator(materialDefinitions.Current);
 
-                if (materialDefinition != null && false == MaterialDefinitions.ContainsKey(materialDefinition.NameHash))
+                if (materialDefinition != null && false == Materials.ContainsKey(materialDefinition.NameHash))
                 {
-                    MaterialDefinitions.Add(materialDefinition.NameHash, materialDefinition);
+                    Materials.Add(materialDefinition.NameHash, materialDefinition);
                 }
             }
         }
 
         private void LoadVertexLayoutsByXPathNavigator(XPathNavigator navigator)
         {
-            //material definitions
+            // material definitions
             XPathNodeIterator vertexLayouts;
 
             try

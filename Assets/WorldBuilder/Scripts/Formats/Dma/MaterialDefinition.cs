@@ -32,15 +32,15 @@
 
             MaterialDefinition materialDefinition = new MaterialDefinition();
 
-            //name
+            // Name
             materialDefinition.Name = navigator.GetAttribute("Name", string.Empty);
             materialDefinition.NameHash = Jenkins.OneAtATime(materialDefinition.Name);
 
-            //type
+            // Type
             materialDefinition.Type = navigator.GetAttribute("Type", string.Empty);
             materialDefinition.TypeHash = Jenkins.OneAtATime(materialDefinition.Type);
 
-            //draw styles
+            // Draw styles
             XPathNodeIterator entries = navigator.Select("./Array[@Name='DrawStyles']/Object[@Class='DrawStyle']");
 
             while (entries.MoveNext())
@@ -56,9 +56,6 @@
             return materialDefinition;
         }
 
-        public override string ToString()
-        {
-            return Name;
-        }
+        public override string ToString() => Name;
     }
 }

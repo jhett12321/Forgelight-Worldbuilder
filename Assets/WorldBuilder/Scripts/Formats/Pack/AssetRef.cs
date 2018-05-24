@@ -37,7 +37,7 @@
 
             uint count = stream.ReadUInt32();
             assetRef.Name = stream.ReadString((int)count);
-            assetRef.DisplayName = assetRef.Name + " (" + pack.Name + ')';
+            assetRef.DisplayName = assetRef.Name + " (" + pack.DisplayName + ')';
             assetRef.AbsoluteOffset = stream.ReadUInt32();
             assetRef.Size = stream.ReadUInt32();
             assetRef.Crc32 = stream.ReadUInt32();

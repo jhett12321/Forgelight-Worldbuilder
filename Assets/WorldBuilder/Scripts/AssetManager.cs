@@ -43,8 +43,8 @@
 
                 // We found a matching asset. Attempt to deserialize it using the provided type.
                 T retVal = new T();
-                retVal.Name = assetName;
-                retVal.DisplayName = Path.GetFileNameWithoutExtension(assetName) + " (" + pack.Name + ")";
+                retVal.Name = asset.Name;
+                retVal.DisplayName = asset.DisplayName;
 
                 bool result;
                 MemoryStream memoryStream = pack.CreateAssetStream(asset); // Disposed by BinaryStream.

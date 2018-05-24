@@ -28,6 +28,7 @@
         public UnityEngine.Mesh CreateMeshFromDme(Dme modelData)
         {
             UnityEngine.Mesh mesh = new UnityEngine.Mesh();
+            mesh.name = modelData.Name;
             mesh.subMeshCount = modelData.Meshes.Count;
 
             List<Vector3> verts = new List<Vector3>();

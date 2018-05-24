@@ -1,9 +1,12 @@
 ﻿namespace WorldBuilder.Formats
 {
     using System.IO;
+    using Syroot.BinaryData;
 
     public interface IAsset
     {
+        ByteConverter ByteConverter { get; }
+
         /// <summary>
         /// The base name of this asset, as referenced in pack files.
         /// </summary>
@@ -17,7 +20,7 @@
 
     public interface IReadableAsset : IAsset
     {
-        bool Deserialize(Stream stream);
+        bool Deserialize(BinaryStream stream);
     }
 
     public interface IWritableAsset : IAsset

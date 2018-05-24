@@ -12,8 +12,10 @@
 
     public class CnkLOD : IReadableAsset, IPoolable
     {
+        public ByteConverter ByteConverter => ByteConverter.Little;
         public string Name { get; set; }
         public string DisplayName { get; set; }
+
         public ChunkType ChunkType { get; private set; }
 
         #region Structure
@@ -121,7 +123,7 @@
             TileOccluderInfos.Clear();
         }
 
-        public bool Deserialize(Stream stream)
+        public bool Deserialize(BinaryStream stream)
         {
             // Header
             string magic = stream.ReadString(3);

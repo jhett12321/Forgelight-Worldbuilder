@@ -9,12 +9,10 @@
     public class ForgelightActor : MonoBehaviour
     {
         public Adr ActorDefinition { get; private set; }
-        public MeshRenderer MeshRenderer { get; private set; }
 
-        public void Init(Adr actorDef, MeshRenderer meshRenderer)
+        public void Init(Adr actorDef)
         {
             this.ActorDefinition = actorDef;
-            this.MeshRenderer = meshRenderer;
         }
     }
 }

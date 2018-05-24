@@ -9,6 +9,7 @@
 
     public class Zone : IReadableAsset, IWritableAsset
     {
+        public ByteConverter ByteConverter => ByteConverter.Little;
         public string Name { get; set; }
         public string DisplayName { get; set; }
 
@@ -41,7 +42,7 @@
 
         #endregion
 
-        public bool Deserialize(Stream stream)
+        public bool Deserialize(BinaryStream stream)
         {
             // Header
             Assert.AreEqual(MAGIC, stream.ReadString(4), "Zone file does not have the correct header!");

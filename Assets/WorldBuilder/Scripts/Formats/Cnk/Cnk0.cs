@@ -10,8 +10,10 @@
 
     public class Cnk0 : IReadableAsset
     {
+        public ByteConverter ByteConverter => ByteConverter.Little;
         public string Name { get; set; }
         public string DisplayName { get; set; }
+
         public ChunkType ChunkType { get; set; }
 
         #region Structure
@@ -110,7 +112,7 @@
         }
         #endregion
 
-        public bool Deserialize(Stream stream)
+        public bool Deserialize(BinaryStream stream)
         {
             Cnk0 chunk = new Cnk0();
 

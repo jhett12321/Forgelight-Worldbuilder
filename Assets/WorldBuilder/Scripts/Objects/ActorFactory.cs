@@ -25,6 +25,19 @@
         [Inject] private AssetManager assetManager;
         [Inject] private MeshFactory meshFactory;
 
+        public ForgelightActor CreateActor(string actorDefName)
+        {
+            Adr actorDefinition = assetManager.LoadPackAsset<Adr>(actorDefName);
+
+            if (actorDefinition == null)
+            {
+                Debug.LogWarning("Actor \"" + actorDefName + "\" does not exist!");
+                return null;
+            }
+
+            return CreateActor(actorDefinition);
+        }
+
         public ForgelightActor CreateActor(Adr actorDefinition)
         {
             ForgelightActor actorSource;
@@ -38,7 +51,7 @@
             return actorInstance;
         }
 
-        public ForgelightActor LoadNewActor(Adr actorDefinition)
+        private ForgelightActor LoadNewActor(Adr actorDefinition)
         {
             GameObject actorSource = new GameObject(actorDefinition.DisplayName);
             ForgelightActor actor = actorSource.AddComponent<ForgelightActor>();
@@ -50,13 +63,14 @@
 
             Dme modelDef = assetManager.LoadPackAsset<Dme>(actorDefinition.Base);
             meshFilter.sharedMesh = meshFactory.CreateMeshFromDme(modelDef);
+            meshRenderer.sharedMaterials = new Material[meshFilter.sharedMesh.subMeshCount];
 
             // TODO LOD Groups
 
-            actor.Init(actorDefinition, meshRenderer);
+            actor.Init(actorDefinition);
+            actor.transform.SetParent(actorPoolParent.transform);
 
             return actor;
         }
-
     }
 }

@@ -1,19 +1,21 @@
 ﻿namespace WorldBuilder.Formats.Areas
 {
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Xml;
     using System.Xml.Linq;
+    using Syroot.BinaryData;
     using UnityEngine;
 
     public class Areas : IReadableAsset
     {
         public List<AreaDefinition> AreaDefinitions = new List<AreaDefinition>();
+
+        public ByteConverter ByteConverter => ByteConverter.Little;
         public string Name { get; set; }
         public string DisplayName { get; set; }
 
-        public bool Deserialize(Stream stream)
+        public bool Deserialize(BinaryStream stream)
         {
             XmlReaderSettings settings = new XmlReaderSettings
             {

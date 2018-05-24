@@ -5,45 +5,42 @@
     using Syroot.BinaryData;
     using UnityEngine.Assertions;
 
-    public class Pack
+    public class Pack : IReadableAsset
     {
         public string Path { get; private set; }
+        public readonly Dictionary<string, AssetRef> Assets = new Dictionary<string, AssetRef>();
 
-        public string Name => System.IO.Path.GetFileName(Path);
+        public ByteConverter ByteConverter => ByteConverter.Big;
 
-        public Dictionary<string, AssetRef> Assets = new Dictionary<string, AssetRef>();
+        public string Name { get; set; }
+        public string DisplayName { get; set; }
 
-        private Pack(string path)
+        public bool Deserialize(BinaryStream stream)
         {
-            Path = path;
+            uint nextChunkAbsoluteOffset = 0;
+
+            do
+            {
+                stream.Seek(nextChunkAbsoluteOffset, SeekOrigin.Begin);
+
+                nextChunkAbsoluteOffset = stream.ReadUInt32();
+                uint fileCount = stream.ReadUInt32();
+
+                for (uint i = 0; i < fileCount; ++i)
+                {
+                    AssetRef file = AssetRef.LoadBinary(this, stream);
+                    Assets[file.Name] = file;
+                }
+            } while (nextChunkAbsoluteOffset != 0);
+
+            return true;
         }
 
-        public static Pack LoadBinary(string path)
+        public Pack(string path)
         {
-            Pack pack = new Pack(path);
-
-            using (FileStream fileStream = File.OpenRead(path))
-            using (BinaryStream binaryStream = new BinaryStream(fileStream, ByteConverter.Big))
-            {
-                uint nextChunkAbsoluteOffset = 0;
-
-                do
-                {
-                    fileStream.Seek(nextChunkAbsoluteOffset, SeekOrigin.Begin);
-
-                    nextChunkAbsoluteOffset = binaryStream.ReadUInt32();
-                    uint fileCount = binaryStream.ReadUInt32();
-
-                    for (uint i = 0; i < fileCount; ++i)
-                    {
-                        AssetRef file = AssetRef.LoadBinary(pack, fileStream);
-
-                        pack.Assets[file.Name] = file;
-                    }
-                } while (nextChunkAbsoluteOffset != 0);
-            }
-
-            return pack;
+            Path = path;
+            Name = path;
+            DisplayName = System.IO.Path.GetFileNameWithoutExtension(path);
         }
 
         public MemoryStream CreateAssetStreamByName(string name)

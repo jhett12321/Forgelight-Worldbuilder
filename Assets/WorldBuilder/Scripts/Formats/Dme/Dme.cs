@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using Dma;
     using Syroot.BinaryData;
     using UnityEngine;
@@ -16,6 +15,8 @@
     /// </summary>
     public class Dme : IReadableAsset, IPoolable
     {
+        public ByteConverter ByteConverter => ByteConverter.Little;
+
         public string Name { get; set; }
         public string DisplayName { get; set; }
         public ModelType ModelType { get; private set; }
@@ -70,8 +71,10 @@
             BoneMapEntries.Clear();
         }
 
-        public bool Deserialize(Stream stream)
+        public bool Deserialize(BinaryStream stream)
         {
+            stream.ByteConverter = ByteConverter.Little;
+
             // Header
             Assert.AreEqual(MAGIC, stream.ReadString(4), "Model File header does not match magic value!");
 

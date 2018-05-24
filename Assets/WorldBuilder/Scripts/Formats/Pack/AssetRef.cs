@@ -29,35 +29,32 @@
             AssetType = AssetType.Unknown;
         }
 
-        public static AssetRef LoadBinary(Pack pack, Stream stream)
+        public static AssetRef LoadBinary(Pack pack, BinaryStream stream)
         {
             AssetRef assetRef;
 
-            using (BinaryStream reader = new BinaryStream(stream, ByteConverter.Big))
+            assetRef = new AssetRef(pack);
+
+            uint count = stream.ReadUInt32();
+            assetRef.Name = stream.ReadString((int)count);
+            assetRef.DisplayName = assetRef.Name + " (" + pack.Name + ')';
+            assetRef.AbsoluteOffset = stream.ReadUInt32();
+            assetRef.Size = stream.ReadUInt32();
+            assetRef.Crc32 = stream.ReadUInt32();
+
+            // Set the type of the asset based on the extension
+            // First get the extension without the leading '.'
+            string extension = Path.GetExtension(assetRef.Name).Substring(1);
+
+            try
             {
-                assetRef = new AssetRef(pack);
-
-                uint count = reader.ReadUInt32();
-                assetRef.Name = reader.ReadString((int)count);
-                assetRef.DisplayName = assetRef.Name + " (" + pack.Name + ')';
-                assetRef.AbsoluteOffset = reader.ReadUInt32();
-                assetRef.Size = reader.ReadUInt32();
-                assetRef.Crc32 = reader.ReadUInt32();
-
-                // Set the type of the asset based on the extension
-                // First get the extension without the leading '.'
-                string extension = Path.GetExtension(assetRef.Name).Substring(1);
-
-                try
-                {
-                    assetRef.AssetType = (AssetType) Enum.Parse(typeof (AssetType), extension, true);
-                }
-                catch (ArgumentException)
-                {
-                    // This extension isn't mapped in the enum
-                    Debug.LogWarning("Unknown Forgelight File Type: " + extension);
-                    assetRef.AssetType = AssetType.Unknown;
-                }
+                assetRef.AssetType = (AssetType) Enum.Parse(typeof (AssetType), extension, true);
+            }
+            catch (ArgumentException)
+            {
+                // This extension isn't mapped in the enum
+                Debug.LogWarning("Unknown Forgelight File Type: " + extension);
+                assetRef.AssetType = AssetType.Unknown;
             }
 
             return assetRef;

@@ -5,6 +5,7 @@
     using System.IO;
     using System.Xml.XPath;
     using Dme;
+    using Syroot.BinaryData;
 
     /// <summary>
     /// Represents the materials_3.xml file.
@@ -14,10 +15,11 @@
         public Dictionary<uint, MaterialDefinition> Materials { get; } = new Dictionary<uint, MaterialDefinition>();
         public Dictionary<uint, VertexLayout> VertexLayouts { get; } = new Dictionary<uint, VertexLayout>();
 
+        public ByteConverter ByteConverter => ByteConverter.Little;
         public string Name { get; set; }
         public string DisplayName { get; set; }
 
-        public bool Deserialize(Stream stream)
+        public bool Deserialize(BinaryStream stream)
         {
             using (StreamReader streamReader = new StreamReader(stream))
             {

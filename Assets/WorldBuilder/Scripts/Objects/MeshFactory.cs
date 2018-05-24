@@ -28,6 +28,7 @@
         public UnityEngine.Mesh CreateMeshFromDme(Dme modelData)
         {
             UnityEngine.Mesh mesh = new UnityEngine.Mesh();
+            mesh.subMeshCount = modelData.Meshes.Count;
 
             List<Vector3> verts = new List<Vector3>();
             List<Vector2> uvs = new List<Vector2>();
@@ -40,18 +41,22 @@
 
             // Apply the Verts and UVs to the mesh
             mesh.SetVertices(verts);
-            mesh.SetUVs(0, uvs);
 
             // Triangles
+            uint vertCount = 0;
             for (int i = 0; i < modelData.Meshes.Count; i++)
             {
                 Mesh meshData = modelData.Meshes[i];
 
                 mesh.indexFormat = GetIndexFormat(meshData);
-                int[] triangles = GetMeshTriangles(meshData);
-
+                int[] triangles = GetMeshTriangles(meshData, vertCount);
                 mesh.SetTriangles(triangles, i);
+
+                vertCount += meshData.VertexCount;
             }
+
+            mesh.SetUVs(0, uvs);
+            mesh.RecalculateNormals();
 
             return mesh;
         }
@@ -81,31 +86,33 @@
             }
         }
 
-        private int[] GetMeshTriangles(Mesh meshData)
+        private int[] GetMeshTriangles(Mesh meshData, uint vertCount)
         {
             IndexFormat format = GetIndexFormat(meshData);
 
-            int[] triangles = new int[meshData.IndexCount];
+            int[] indices = new int[meshData.IndexCount];
 
             switch (format)
             {
                 case IndexFormat.UInt16:
                     for (int i = 0; i < meshData.IndexCount; i++)
                     {
-                        triangles[i] = BitConverter.ToUInt16(meshData.IndexData, i * 2);
+                        // We reverse the indices otherwise our normals will be inverted.
+                        indices[meshData.IndexCount - 1 - i] = Convert.ToInt32(vertCount + BitConverter.ToUInt16(meshData.IndexData, i * 2));
                     }
                     break;
                 case IndexFormat.UInt32:
                     for (int i = 0; i < meshData.IndexCount; i++)
                     {
-                        triangles[i] = BitConverter.ToInt32(meshData.IndexData, i * 4);
+                        // We reverse the indices otherwise our normals will be inverted.
+                        indices[meshData.IndexCount - 1 - i] = Convert.ToInt32(vertCount + BitConverter.ToUInt32(meshData.IndexData, i * 4));
                     }
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
 
-            return triangles;
+            return indices;
         }
 
         /// <summary>

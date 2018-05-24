@@ -8,16 +8,18 @@
     /// <summary>
     /// Provides lookup utilities for MaterialDefinitions and VertexLayouts.
     /// </summary>
-    public class MaterialDefinitionManager
+    public class MaterialDefinitionManager : IInitializable
     {
         // Dependencies
         [Inject] private AssetManager assetManager;
 
-        public readonly MaterialDefinitions materialDefinitions;
+        public const string MATERIALS_ASSET = "materials_3.xml";
 
-        public MaterialDefinitionManager(string materialsAsset)
+        private MaterialDefinitions materialDefinitions { get; set; }
+
+        public void Initialize()
         {
-            materialDefinitions = assetManager.LoadPackAsset<MaterialDefinitions>(materialsAsset);
+            materialDefinitions = assetManager.LoadPackAsset<MaterialDefinitions>(MATERIALS_ASSET);
         }
 
         /// <summary>

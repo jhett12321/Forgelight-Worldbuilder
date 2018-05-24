@@ -1,9 +1,9 @@
 ﻿namespace WorldBuilder.Formats.Adr
 {
     using System.Collections.Generic;
-    using System.IO;
     using System.Xml;
     using System.Xml.Linq;
+    using Syroot.BinaryData;
     using UnityEngine;
 
     /// <summary>
@@ -11,6 +11,7 @@
     /// </summary>
     public class Adr : IReadableAsset
     {
+        public ByteConverter ByteConverter => ByteConverter.Little;
         public string Name { get; set; }
         public string DisplayName { get; set; }
 
@@ -21,7 +22,7 @@
 
         public bool IsPlaceable { get; private set; }
 
-        public bool Deserialize(Stream stream)
+        public bool Deserialize(BinaryStream stream)
         {
             XmlReaderSettings settings = new XmlReaderSettings
             {

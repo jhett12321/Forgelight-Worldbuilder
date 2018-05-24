@@ -8,12 +8,11 @@
     [CreateAssetMenu(fileName = "AppConfig", menuName = "WorldBuilder/Application Configuration")]
     public class AppInstaller : ScriptableObjectInstaller
     {
-        public string MaterialsAsset = "materials_3.xml";
-
         public override void InstallBindings()
         {
+            Container.Bind<ForgelightGame>().FromNew().AsSingle().NonLazy();
             Container.Bind<AssetManager>().FromNew().AsSingle().NonLazy();
-            Container.Bind<MaterialDefinitionManager>().FromNew().AsSingle().WithArguments(MaterialsAsset).NonLazy();
+            Container.BindInterfacesAndSelfTo<MaterialDefinitionManager>().FromNew().AsSingle().NonLazy();
 
             Container.Bind<ActorFactory>().FromNew().AsSingle().NonLazy();
             Container.Bind<MeshFactory>().FromNew().AsSingle().NonLazy();

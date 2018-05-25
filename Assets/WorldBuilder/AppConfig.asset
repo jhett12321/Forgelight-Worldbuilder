@@ -11,4 +11,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bd84b5369fd46edb29b34b98c5e4125, type: 3}
   m_Name: AppConfig
   m_EditorClassIdentifier: 
-  MaterialsAsset: materials_3.xml
+  ActorSharedMaterial: {fileID: 2100000, guid: c8328df0484ce0c49a48a60cdab21043, type: 2}

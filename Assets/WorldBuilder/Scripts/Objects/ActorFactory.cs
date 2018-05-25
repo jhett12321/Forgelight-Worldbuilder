@@ -3,6 +3,7 @@
     using System.Collections.Generic;
     using Formats.Adr;
     using Formats.Dme;
+    using Materials;
     using UnityEngine;
     using Zenject;
 
@@ -11,6 +12,11 @@
     /// </summary>
     public class ActorFactory
     {
+        // Dependencies
+        [Inject] private AssetManager assetManager;
+        [Inject] private ActorMaterialFactory materialFactory;
+        [Inject] private MeshFactory meshFactory;
+
         private Dictionary<Adr, ForgelightActor> cachedActors = new Dictionary<Adr, ForgelightActor>();
         private GameObject actorPoolParent;
 
@@ -20,10 +26,6 @@
             actorPoolParent = new GameObject("Available Actors");
             actorPoolParent.SetActive(false);
         }
-
-        // Dependencies
-        [Inject] private AssetManager assetManager;
-        [Inject] private MeshFactory meshFactory;
 
         public ForgelightActor CreateActor(string actorDefName)
         {
@@ -59,14 +61,13 @@
             MeshFilter meshFilter = actorSource.AddComponent<MeshFilter>();
             MeshRenderer meshRenderer = actorSource.AddComponent<MeshRenderer>();
 
-            // TODO Materials and Textures
-
             Dme modelDef = assetManager.LoadPackAsset<Dme>(actorDefinition.Base);
             meshFilter.sharedMesh = meshFactory.CreateMeshFromDme(modelDef);
-            meshRenderer.sharedMaterials = new Material[meshFilter.sharedMesh.subMeshCount];
+
+            // Materials
+            meshRenderer.sharedMaterials = materialFactory.GetActorMaterials(modelDef);
 
             // TODO LOD Groups
-
             actor.Init(actorDefinition);
             actor.transform.SetParent(actorPoolParent.transform);
 

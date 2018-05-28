@@ -3,6 +3,7 @@
     using Materials;
     using Objects;
     using UnityEngine;
+    using WorldEditor;
     using Zenject;
 
     [CreateAssetMenu(fileName = "AppConfig", menuName = "WorldBuilder/Application Configuration")]
@@ -19,6 +20,9 @@
             Container.Bind<ActorFactory>().FromNew().AsSingle().NonLazy();
             Container.Bind<ActorMaterialFactory>().FromNew().AsSingle().WithArguments(ActorSharedMaterial).NonLazy();
             Container.Bind<MeshFactory>().FromNew().AsSingle().NonLazy();
+
+            Container.Bind<CameraManager>().FromComponentInHierarchy().AsSingle().NonLazy();
+            Container.Bind<IEditorControl>().FromComponentInHierarchy().AsSingle().NonLazy();
         }
     }
 }

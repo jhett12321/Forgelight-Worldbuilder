@@ -17,12 +17,24 @@
         [Inject] private ActorMaterialFactory materialFactory;
         [Inject] private MeshFactory meshFactory;
 
-        private Dictionary<Adr, ForgelightActor> cachedActors = new Dictionary<Adr, ForgelightActor>();
+        private Dictionary<string, ForgelightActor> cachedActors = new Dictionary<string, ForgelightActor>();
         private GameObject actorPoolParent;
 
-        public ActorFactory()
+        [Inject]
+        public ActorFactory(GameManager gameManager)
         {
+            gameManager.OnGameLoaded += OnGameLoaded;
+        }
+
+        private void OnGameLoaded(ForgelightGame game)
+        {
+            if (actorPoolParent != null)
+            {
+                Object.Destroy(actorPoolParent);
+            }
+
             // TODO Object Pooling
+            cachedActors.Clear();
             actorPoolParent = new GameObject("Available Actors");
             actorPoolParent.SetActive(false);
         }
@@ -43,9 +55,10 @@
         public ForgelightActor CreateActor(Adr actorDefinition)
         {
             ForgelightActor actorSource;
-            if (!cachedActors.TryGetValue(actorDefinition, out actorSource))
+            if (!cachedActors.TryGetValue(actorDefinition.Name, out actorSource))
             {
                 actorSource = LoadNewActor(actorDefinition);
+                cachedActors[actorDefinition.Name] = actorSource;
             }
 
             ForgelightActor actorInstance = GameObject.Instantiate(actorSource.gameObject).GetComponent<ForgelightActor>();

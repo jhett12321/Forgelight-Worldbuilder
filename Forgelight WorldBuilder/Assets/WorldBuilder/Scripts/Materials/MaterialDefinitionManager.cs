@@ -8,7 +8,7 @@
     /// <summary>
     /// Provides lookup utilities for MaterialDefinitions and VertexLayouts.
     /// </summary>
-    public class MaterialDefinitionManager : IInitializable
+    public class MaterialDefinitionManager
     {
         // Dependencies
         [Inject] private AssetManager assetManager;
@@ -17,7 +17,13 @@
 
         private MaterialDefinitions materialDefinitions { get; set; }
 
-        public void Initialize()
+        [Inject]
+        public MaterialDefinitionManager(GameManager gameManager)
+        {
+            gameManager.OnGameLoaded += OnNewGameLoaded;
+        }
+
+        private void OnNewGameLoaded(ForgelightGame game)
         {
             materialDefinitions = assetManager.LoadPackAsset<MaterialDefinitions>(MATERIALS_ASSET);
         }

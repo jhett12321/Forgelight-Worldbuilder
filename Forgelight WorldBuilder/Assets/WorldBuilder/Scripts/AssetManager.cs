@@ -10,7 +10,7 @@
 
     public class AssetManager
     {
-        [Inject] private ForgelightGame forgelightGame;
+        [Inject] private GameManager gameManager;
 
         public MemoryStream CreateAssetMemoryStreamByName(string assetName)
         {
@@ -25,7 +25,7 @@
         /// <returns>The deserialized asset instance.</returns>
         public T LoadPackAsset<T>(string assetName) where T : IReadableAsset, new()
         {
-            Pack[] packs = forgelightGame.Packs;
+            Pack[] packs = gameManager.ActiveGame.Packs;
 
             Assert.IsNotNull(packs);
             Assert.IsFalse(packs.Length == 0);

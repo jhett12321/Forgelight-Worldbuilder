@@ -6,14 +6,14 @@
     using WorldEditor;
     using Zenject;
 
-    [CreateAssetMenu(fileName = "AppConfig", menuName = "WorldBuilder/Application Configuration")]
+    [CreateAssetMenu(fileName = "EditorConfig", menuName = "WorldBuilder/Editor Config")]
     public class AppInstaller : ScriptableObjectInstaller
     {
         public Material ActorSharedMaterial;
 
         public override void InstallBindings()
         {
-            Container.Bind<ForgelightGame>().FromNew().AsSingle().NonLazy();
+            Container.Bind<GameManager>().FromNew().AsSingle().NonLazy();
             Container.Bind<AssetManager>().FromNew().AsSingle().NonLazy();
             Container.BindInterfacesAndSelfTo<MaterialDefinitionManager>().FromNew().AsSingle().NonLazy();
 

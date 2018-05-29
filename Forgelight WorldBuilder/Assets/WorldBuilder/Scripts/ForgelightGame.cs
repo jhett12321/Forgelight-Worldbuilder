@@ -1,26 +1,36 @@
 ﻿namespace WorldBuilder
 {
+    using System;
     using System.IO;
+    using System.Threading.Tasks;
     using Formats.Pack;
     using Syroot.BinaryData;
+    using UnityEngine;
 
+    /// <summary>
+    /// Represents a loaded Forgelight Game.
+    /// </summary>
     public class ForgelightGame
     {
-        private static readonly string PACK_RELATIVE_DIR = "Resources" + Path.DirectorySeparatorChar + "Assets";
+        private const float MAX_FRAME_TIME = 0.04f;
 
-        public string Name;
-        public Pack[] Packs;
+        public readonly string Name;
+        public Pack[] Packs { get; private set; }
 
-        public void SwitchActiveGame(string newGamePath)
+        private readonly string packDir;
+
+        public ForgelightGame(string name, string packDir)
         {
-            LoadPackFiles(Path.Combine(newGamePath, PACK_RELATIVE_DIR));
+            Name = name;
+            this.packDir = packDir;
         }
 
-        private void LoadPackFiles(string packPath)
+        public async Task LoadPacks(IProgress<int> progress)
         {
-            string[] packPaths = Directory.GetFiles(packPath, "*.pack", SearchOption.TopDirectoryOnly);
+            string[] packPaths = Directory.GetFiles(packDir, "*.pack", SearchOption.TopDirectoryOnly);
             Packs = new Pack[packPaths.Length];
 
+            float frameStart = Time.realtimeSinceStartup;
             for (int i = 0; i < packPaths.Length; i++)
             {
                 string path = packPaths[i];
@@ -33,6 +43,14 @@
                     pack.Deserialize(binaryStream);
 
                     Packs[i] = pack;
+                }
+
+                progress.Report(i * 100 / packPaths.Length);
+
+                if (Time.realtimeSinceStartup - frameStart > MAX_FRAME_TIME)
+                {
+                    frameStart = Time.realtimeSinceStartup;
+                    await new WaitForEndOfFrame();
                 }
             }
         }

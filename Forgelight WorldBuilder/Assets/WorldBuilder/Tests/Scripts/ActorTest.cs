@@ -7,7 +7,7 @@
     [RequireComponent(typeof(GameObjectContext))]
     public class ActorTest : MonoBehaviour
     {
-        [Inject] private ForgelightGame forgelightGame;
+        [Inject] private GameManager gameManager;
         [Inject] private ActorFactory actorFactory;
 
         public string gamePath;
@@ -15,10 +15,11 @@
 
         private void Awake()
         {
-            forgelightGame.SwitchActiveGame(gamePath);
+            gameManager.SwitchGame();
+            gameManager.OnGameLoaded += OnGameLoaded;
         }
 
-        private void Start()
+        private void OnGameLoaded(ForgelightGame game)
         {
             actorFactory.CreateActor(actorDefName);
         }

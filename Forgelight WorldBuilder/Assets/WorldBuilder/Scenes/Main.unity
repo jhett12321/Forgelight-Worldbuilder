@@ -170,12 +170,12 @@ Camera:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_RenderingPath: -1
+  m_RenderingPath: 3
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
-  m_AllowMSAA: 1
+  m_AllowMSAA: 0
   m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
   m_OcclusionCulling: 1
@@ -222,9 +222,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3c133ecf39c44a12a895eb8fbaaf87c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gamePath: C:\Program Files (x86)\Steam\steamapps\common\PlanetSide 2
-  actorDefName: Vehicle_VS_Magrider_Weapon_PulsedParticleAccelerator002.adr
-  terrainZoneName: Indar
+  zoneName: Esamir.zone
 --- !u!114 &975860391
 MonoBehaviour:
   m_ObjectHideFlags: 0

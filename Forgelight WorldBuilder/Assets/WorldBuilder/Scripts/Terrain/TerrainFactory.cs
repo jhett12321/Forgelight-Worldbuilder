@@ -8,7 +8,6 @@
     using UnityEngine;
     using UnityEngine.Assertions;
     using Zenject;
-    using Object = UnityEngine.Object;
 
     public class TerrainFactory
     {
@@ -18,46 +17,7 @@
         [Inject] private ChunkMeshFactory chunkMeshFactory;
         [Inject] private ChunkMaterialFactory materialFactory;
 
-        private GameObject terrainParent;
-
-        [Inject]
-        public TerrainFactory(GameManager gameManager)
-        {
-            gameManager.OnGameLoaded += OnGameLoaded;
-        }
-
-        private void OnGameLoaded()
-        {
-            if (terrainParent != null)
-            {
-                Object.Destroy(terrainParent);
-            }
-
-            terrainParent = new GameObject("Forgelight Terrain");
-        }
-
-        public async void LoadZoneTerrain(string zone)
-        {
-            AssetRef[] assets = assetManager.GetAssetsByType(AssetType.CNK1, zone);
-
-            if (assets == null || assets.Length == 0)
-            {
-                Debug.LogWarningFormat("Could not locate any chunk data associated with zone \"{0}\". Skipping load of terrain.", zone);
-                return;
-            }
-
-            terrainParent.name = zone + " Terrain";
-
-            foreach (AssetRef assetRef in assets)
-            {
-                CreateChunk(assetRef);
-                await new WaitForEndOfFrame();
-            }
-
-            terrainParent.transform.localScale = new Vector3(2, 2, 2);
-        }
-
-        private void CreateChunk(AssetRef assetRef)
+        public ForgelightChunk CreateChunk(AssetRef assetRef)
         {
             string chunkName = Path.GetFileNameWithoutExtension(assetRef.Name);
 
@@ -67,23 +27,22 @@
 
             // Deserialization
             Mesh mesh;
-            Material[] materials;
+            Material material;
 
             try
             {
                 mesh = chunkMeshFactory.CreateFromCnkLOD(chunkData);
-                materials = materialFactory.GetMaterials(chunkData);
+                material = materialFactory.GetMaterial(chunkData);
             }
             catch (Exception e)
             {
                 Debug.LogErrorFormat("An error occurred while creating chunk \"{0}\". See below for details.", assetRef.Name);
                 Debug.LogException(e);
-                return;
+                return null;
             }
 
             Assert.IsNotNull(mesh);
-            Assert.IsNotNull(materials);
-            Assert.IsFalse(materials.Length == 0);
+            Assert.IsNotNull(material);
 
             // GameObject Instance
             GameObject instance = new GameObject(chunkName);
@@ -93,9 +52,15 @@
 
             // Assign deserialized data
             meshFilter.sharedMesh = mesh;
-            meshRenderer.sharedMaterials = materials;
 
-            chunk.transform.SetParent(terrainParent.transform);
+            // TODO Make a combined mesh instead of supplying the same material 4 times.
+            Material[] materials = new Material[4];
+            for (int i = 0; i < materials.Length; i++)
+            {
+                materials[i] = material;
+            }
+
+            meshRenderer.sharedMaterials = materials;
 
             // Position the terrain instance
             string[] nameElements = chunkName.Split('_');
@@ -105,6 +70,8 @@
             int chunkPosZ = (Convert.ToInt32(nameElements[1]) * CHUNK_POS_OFFSET);
 
             chunk.transform.position = new Vector3(chunkPosX, 0, chunkPosZ);
+
+            return chunk;
         }
     }
 }

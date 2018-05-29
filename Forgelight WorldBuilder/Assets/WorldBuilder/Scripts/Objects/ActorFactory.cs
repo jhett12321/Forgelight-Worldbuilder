@@ -22,9 +22,12 @@
         private Dictionary<string, ForgelightActor> cachedActors = new Dictionary<string, ForgelightActor>();
         private GameObject actorPoolParent;
 
+        private ForgelightActor missingActorPrefab;
+
         [Inject]
-        public ActorFactory(GameManager gameManager)
+        public ActorFactory(GameManager gameManager, ForgelightActor missingActorPrefab)
         {
+            this.missingActorPrefab = missingActorPrefab;
             gameManager.OnGameLoaded += OnGameLoaded;
         }
 
@@ -63,7 +66,7 @@
                 cachedActors[actorDefinition.Name] = actorSource;
             }
 
-            ForgelightActor actorInstance = GameObject.Instantiate(actorSource.gameObject).GetComponent<ForgelightActor>();
+            ForgelightActor actorInstance = Object.Instantiate(actorSource);
 
             return actorInstance;
         }
@@ -71,31 +74,44 @@
         private ForgelightActor LoadNewActor(Adr actorDefinition)
         {
             Dme modelDef = assetManager.LoadPackAsset<Dme>(actorDefinition.Base);
+            ForgelightActor actor;
 
-            Assert.IsNotNull(modelDef);
+            if (modelDef == null)
+            {
+                actor = CreateMissingPlaceholder(actorDefinition);
+            }
+            else
+            {
+                // Deserialization
+                UnityEngine.Mesh mesh = actorMeshFactory.CreateMeshFromDme(modelDef);
+                Material[] materials = materialFactory.GetActorMaterials(modelDef);
 
-            // Deserialization
-            UnityEngine.Mesh mesh = actorMeshFactory.CreateMeshFromDme(modelDef);
-            Material[] materials = materialFactory.GetActorMaterials(modelDef);
+                Assert.IsNotNull(mesh);
+                Assert.IsNotNull(materials);
 
-            Assert.IsNotNull(mesh);
-            Assert.IsNotNull(materials);
+                // GameObject "Prefab"
+                GameObject actorSource = new GameObject();
+                actor = actorSource.AddComponent<ForgelightActor>();
+                MeshFilter meshFilter = actorSource.AddComponent<MeshFilter>();
+                MeshRenderer meshRenderer = actorSource.AddComponent<MeshRenderer>();
 
-            // GameObject "Prefab"
-            GameObject actorSource = new GameObject(actorDefinition.DisplayName);
-            ForgelightActor actor = actorSource.AddComponent<ForgelightActor>();
-            MeshFilter meshFilter = actorSource.AddComponent<MeshFilter>();
-            MeshRenderer meshRenderer = actorSource.AddComponent<MeshRenderer>();
-
-            // Assign deserialized data
-            meshFilter.sharedMesh = mesh;
-            meshRenderer.sharedMaterials = materials;
+                // Assign deserialized data
+                meshFilter.sharedMesh = mesh;
+                meshRenderer.sharedMaterials = materials;
+            }
 
             // TODO LOD Groups
+            actor.name = actorDefinition.DisplayName;
             actor.Init(actorDefinition);
             actor.transform.SetParent(actorPoolParent.transform);
 
             return actor;
+        }
+
+        private ForgelightActor CreateMissingPlaceholder(Adr actorDefinition)
+        {
+            Debug.LogErrorFormat("Could not find mesh data for actor definition \"{0}\". Using placeholder asset.", actorDefinition.DisplayName);
+            return Object.Instantiate(missingActorPrefab);
         }
     }
 }

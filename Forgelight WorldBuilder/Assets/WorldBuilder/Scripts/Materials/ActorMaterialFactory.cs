@@ -68,6 +68,13 @@
             }
 
             DdsTexture textureData = assetManager.LoadPackAsset<DdsTexture>(textureName);
+
+            if (textureData == null)
+            {
+                Debug.LogErrorFormat("Could not load texture \"{0}\"", textureName);
+                return null;
+            }
+
             Assert.IsNotNull(textureData);
 
             Texture2D texture = new Texture2D(textureData.Width, textureData.Height, textureData.TextureFormat, true);

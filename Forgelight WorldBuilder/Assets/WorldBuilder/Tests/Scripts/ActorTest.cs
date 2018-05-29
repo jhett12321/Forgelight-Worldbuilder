@@ -1,20 +1,16 @@
 ﻿namespace WorldBuilder.Tests.Scripts
 {
-    using Objects;
-    using Terrain;
     using UnityEngine;
     using Zenject;
+    using Zone;
 
     [RequireComponent(typeof(GameObjectContext))]
     public class ActorTest : MonoBehaviour
     {
         [Inject] private GameManager gameManager;
-        [Inject] private ActorFactory actorFactory;
-        [Inject] private TerrainFactory terrainFactory;
+        [Inject] private ZoneFactory zoneFactory;
 
-        public string gamePath;
-        public string actorDefName;
-        public string terrainZoneName;
+        public string zoneName;
 
         private void Awake()
         {
@@ -24,8 +20,7 @@
 
         private void OnGameLoaded()
         {
-            // actorFactory.CreateActor(actorDefName);
-            terrainFactory.LoadZoneTerrain(terrainZoneName);
+            zoneFactory.LoadZoneFromPacks(zoneName);
         }
     }
 }

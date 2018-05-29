@@ -55,7 +55,7 @@
                     break;
                 default:
                     Debug.LogWarning("Unknown Texture type: " + texFormat);
-                    break;
+                    return false;
             }
 
             // Texture Data

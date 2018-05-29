@@ -1,9 +1,7 @@
 ﻿namespace WorldBuilder.Materials
 {
-    using System.IO;
     using Formats.Cnk;
     using Formats.Dma;
-    using Syroot.BinaryData;
     using UnityEngine;
     using Zenject;
     using Material = UnityEngine.Material;
@@ -18,35 +16,57 @@
             this.source = source;
         }
 
-        public Material[] GetMaterials(CnkLOD chunkData)
-        {
-            Material[] materials = new Material[chunkData.Textures.Count];
-
-            for (int i = 0; i < materials.Length; i++)
-            {
-                materials[i] = CreateMaterial(chunkData.Textures[i]);
-            }
-
-            return materials;
-        }
-
-        private Material CreateMaterial(CnkLOD.Texture texture)
+        public Material GetMaterial(CnkLOD chunkData)
         {
             Material material = new Material(source);
+            Texture2D[] diffuseTextures = new Texture2D[chunkData.Textures.Count];
+            Texture2D[] specTextures = new Texture2D[chunkData.Textures.Count];
 
-            DdsTexture diffuse = assetManager.CreateAsset<DdsTexture>(texture.ColorNXMap);
-            DdsTexture spec = assetManager.CreateAsset<DdsTexture>(texture.SpecNyMap);
+            for (int i = 0; i < chunkData.Textures.Count; i++)
+            {
+                CnkLOD.Texture texture = chunkData.Textures[i];
 
-            Texture2D diffuseTex = new Texture2D(diffuse.Width, diffuse.Height, diffuse.TextureFormat, false);
-            Texture2D specTex = new Texture2D(diffuse.Width, diffuse.Height, spec.TextureFormat, false);
+                DdsTexture diffuse = assetManager.CreateAsset<DdsTexture>(texture.ColorNXMap);
+                DdsTexture spec = assetManager.CreateAsset<DdsTexture>(texture.SpecNyMap);
 
-            diffuseTex.LoadRawTextureData(diffuse.TextureData);
-            specTex.LoadRawTextureData(spec.TextureData);
+                Texture2D diffuseTex = new Texture2D(diffuse.Width, diffuse.Height, diffuse.TextureFormat, false);
+                Texture2D specTex = new Texture2D(spec.Width, spec.Height, spec.TextureFormat, false);
 
-            material.SetTexture("_MainTex", diffuseTex);
-            material.SetTexture("_PackedSpecular", specTex);
+                diffuseTex.LoadRawTextureData(diffuse.TextureData);
+                specTex.LoadRawTextureData(spec.TextureData);
+                diffuseTextures[i] = diffuseTex;
+                specTextures[i] = specTex;
+            }
+
+            Texture2D materialDiffuse = new Texture2D(1024, 1024);
+            materialDiffuse.PackTextures(diffuseTextures, 0);
+
+            Texture2D materialSpec = new Texture2D(1024, 1024);
+            materialSpec.PackTextures(specTextures, 0);
+
+            material.SetTexture("_MainTex", materialDiffuse);
+            material.SetTexture("_PackedSpecular", materialSpec);
 
             return material;
         }
+
+        //private Material CreateMaterial(CnkLOD.Texture texture)
+        //{
+        //    Material material = new Material(source);
+
+        //    DdsTexture diffuse = assetManager.CreateAsset<DdsTexture>(texture.ColorNXMap);
+        //    DdsTexture spec = assetManager.CreateAsset<DdsTexture>(texture.SpecNyMap);
+
+        //    Texture2D diffuseTex = new Texture2D(512, 512, diffuse.TextureFormat, false);
+        //    Texture2D specTex = new Texture2D(512, 512, spec.TextureFormat, false);
+
+        //    diffuseTex.LoadRawTextureData(diffuse.TextureData);
+        //    specTex.LoadRawTextureData(spec.TextureData);
+
+        //    material.SetTexture("_MainTex", diffuseTex);
+        //    material.SetTexture("_PackedSpecular", specTex);
+
+        //    return material;
+        //}
     }
 }

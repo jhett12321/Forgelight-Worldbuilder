@@ -6,10 +6,12 @@
     using UnityEngine;
     using WorldEditor;
     using Zenject;
+    using Zone;
 
     [CreateAssetMenu(fileName = "EditorConfig", menuName = "WorldBuilder/Editor Config")]
     public class AppInstaller : ScriptableObjectInstaller
     {
+        public ForgelightActor MissingActorPrefab;
         public Material ActorSharedMaterial;
         public Material TerrainSharedMaterial;
 
@@ -23,7 +25,9 @@
             Container.BindInterfacesAndSelfTo<MaterialDefinitionManager>().FromNew().AsSingle().NonLazy();
             Container.BindInterfacesAndSelfTo<ActorDefinitionManager>().FromNew().AsSingle().NonLazy();
 
-            Container.Bind<ActorFactory>().FromNew().AsSingle().NonLazy();
+            Container.Bind<ZoneFactory>().FromNew().AsSingle().NonLazy();
+
+            Container.Bind<ActorFactory>().FromNew().AsSingle().WithArguments(MissingActorPrefab).NonLazy();
             Container.Bind<ActorMaterialFactory>().FromNew().AsSingle().WithArguments(ActorSharedMaterial).NonLazy();
             Container.Bind<ActorMeshFactory>().FromNew().AsSingle().NonLazy();
 

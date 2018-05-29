@@ -44,9 +44,6 @@
             rot.y = Mathf.Repeat(rot.y, 360.0f);
             rot.z = Mathf.Repeat(rot.z, 360.0f);
 
-            //Flip our x axis.
-            pos.x = -pos.x;
-
             //Don't perform any transform modifications to area definitions.
             if (transformMode == TransformMode.Area)
             {
@@ -57,7 +54,7 @@
             float rotX;
             float rotY;
 
-            if (fromForgelight)
+            if (!fromForgelight)
             {
                 rotX = rot.y;
                 rotY = -rot.x;

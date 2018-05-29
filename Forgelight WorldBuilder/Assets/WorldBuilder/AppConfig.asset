@@ -11,6 +11,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bd84b5369fd46edb29b34b98c5e4125, type: 3}
   m_Name: AppConfig
   m_EditorClassIdentifier: 
+  MissingActorPrefab: {fileID: 114701412858306608, guid: 3ea8f356c6c7bd24994c35ff23103562,
+    type: 2}
   ActorSharedMaterial: {fileID: 2100000, guid: c8328df0484ce0c49a48a60cdab21043, type: 2}
   TerrainSharedMaterial: {fileID: 2100000, guid: b595b53509d9df94092a474a8c77c6ec,
     type: 2}

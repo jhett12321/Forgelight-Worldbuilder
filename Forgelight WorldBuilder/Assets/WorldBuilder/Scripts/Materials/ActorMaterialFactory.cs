@@ -36,7 +36,7 @@
             return materials;
         }
 
-        public Material CreateMeshMaterial(Mesh mesh)
+        private Material CreateMeshMaterial(Mesh mesh)
         {
             Texture2D diffuseTex = CreateTexture(mesh.BaseDiffuse);
             Texture2D packedSpecTex = CreateTexture(mesh.SpecMap);

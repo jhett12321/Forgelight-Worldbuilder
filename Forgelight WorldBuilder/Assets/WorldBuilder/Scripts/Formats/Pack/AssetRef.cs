@@ -53,7 +53,7 @@
             catch (ArgumentException)
             {
                 // This extension isn't mapped in the enum
-                Debug.LogWarning("Unknown Forgelight File Type: " + extension);
+                Debug.LogWarningFormat("Ignoring Unknown Forgelight File Type: {0}", extension);
                 assetRef.AssetType = AssetType.Unknown;
             }
 

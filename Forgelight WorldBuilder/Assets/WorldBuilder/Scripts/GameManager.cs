@@ -1,9 +1,12 @@
 ﻿namespace WorldBuilder
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
+    using System.Threading.Tasks;
     using SFB;
     using UnityEngine;
+    using Zenject;
 
     /// <summary>
     /// Handles Loading of Forgelight Games.
@@ -14,8 +17,8 @@
         private static readonly string PACK_RELATIVE_DIR = "Resources" + Path.DirectorySeparatorChar + "Assets";
         public ForgelightGame ActiveGame { get; private set; }
 
-        public event GameLoadedEvent OnGameLoaded;
-        public delegate void GameLoadedEvent(ForgelightGame game);
+        [Inject] private List<IEditorLoadable> loadables;
+        public event Action OnGameLoaded;
 
         public void SwitchGame()
         {
@@ -40,12 +43,23 @@
                 try
                 {
                     ActiveGame = new ForgelightGame(Path.GetDirectoryName(path), packPath);
-                    await ActiveGame.LoadPacks(new Progress<int>(progress =>
-                    {
-                        Debug.LogFormat("Pack Load Progress: {0}%", progress);
-                    }));
+                    int lastProgress = 0;
 
-                    OnGameLoaded?.Invoke(ActiveGame);
+                    await ActiveGame.LoadPacks(new Progress<int>(progress => DisplayProgress("Loading Pack Files", ref lastProgress, progress)));
+
+                    Task[] loadTasks = new Task[loadables.Count];
+                    for (int i = 0; i < loadables.Count; i++)
+                    {
+                        IEditorLoadable editorLoadable = loadables[i];
+                        loadTasks[i] = editorLoadable.LoadSystem(new Progress<int>(progress => DisplayProgress(editorLoadable.TaskName, ref lastProgress, progress)));
+                    }
+
+                    foreach (Task task in loadTasks)
+                    {
+                        await task;
+                    }
+
+                    OnGameLoaded?.Invoke();
                 }
                 catch (Exception e)
                 {
@@ -53,6 +67,15 @@
                     throw;
                 }
             });
+        }
+
+        private void DisplayProgress(string taskName, ref int lastProgress, int progress)
+        {
+            if (progress != lastProgress)
+            {
+                Debug.LogFormat("{0}: {1}%", taskName, progress);
+                lastProgress = progress;
+            }
         }
     }
 }

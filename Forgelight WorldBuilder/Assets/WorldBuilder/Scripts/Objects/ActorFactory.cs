@@ -5,6 +5,7 @@
     using Formats.Dme;
     using Materials;
     using UnityEngine;
+    using UnityEngine.Assertions;
     using Zenject;
 
     /// <summary>
@@ -14,8 +15,9 @@
     {
         // Dependencies
         [Inject] private AssetManager assetManager;
+        [Inject] private ActorDefinitionManager actorDefinitionManager;
         [Inject] private ActorMaterialFactory materialFactory;
-        [Inject] private MeshFactory meshFactory;
+        [Inject] private ActorMeshFactory actorMeshFactory;
 
         private Dictionary<string, ForgelightActor> cachedActors = new Dictionary<string, ForgelightActor>();
         private GameObject actorPoolParent;
@@ -26,7 +28,7 @@
             gameManager.OnGameLoaded += OnGameLoaded;
         }
 
-        private void OnGameLoaded(ForgelightGame game)
+        private void OnGameLoaded()
         {
             if (actorPoolParent != null)
             {
@@ -41,15 +43,15 @@
 
         public ForgelightActor CreateActor(string actorDefName)
         {
-            Adr actorDefinition = assetManager.LoadPackAsset<Adr>(actorDefName);
+            Adr actorDefinition = actorDefinitionManager.GetDefinition(actorDefName);
 
-            if (actorDefinition == null)
+            if (actorDefinition != null)
             {
-                Debug.LogWarning("Actor \"" + actorDefName + "\" does not exist!");
-                return null;
+                return CreateActor(actorDefinition);
             }
 
-            return CreateActor(actorDefinition);
+            Debug.LogWarning("Actor \"" + actorDefName + "\" does not exist!");
+            return null;
         }
 
         public ForgelightActor CreateActor(Adr actorDefinition)
@@ -68,17 +70,26 @@
 
         private ForgelightActor LoadNewActor(Adr actorDefinition)
         {
+            Dme modelDef = assetManager.LoadPackAsset<Dme>(actorDefinition.Base);
+
+            Assert.IsNotNull(modelDef);
+
+            // Deserialization
+            UnityEngine.Mesh mesh = actorMeshFactory.CreateMeshFromDme(modelDef);
+            Material[] materials = materialFactory.GetActorMaterials(modelDef);
+
+            Assert.IsNotNull(mesh);
+            Assert.IsNotNull(materials);
+
+            // GameObject "Prefab"
             GameObject actorSource = new GameObject(actorDefinition.DisplayName);
             ForgelightActor actor = actorSource.AddComponent<ForgelightActor>();
-
             MeshFilter meshFilter = actorSource.AddComponent<MeshFilter>();
             MeshRenderer meshRenderer = actorSource.AddComponent<MeshRenderer>();
 
-            Dme modelDef = assetManager.LoadPackAsset<Dme>(actorDefinition.Base);
-            meshFilter.sharedMesh = meshFactory.CreateMeshFromDme(modelDef);
-
-            // Materials
-            meshRenderer.sharedMaterials = materialFactory.GetActorMaterials(modelDef);
+            // Assign deserialized data
+            meshFilter.sharedMesh = mesh;
+            meshRenderer.sharedMaterials = materials;
 
             // TODO LOD Groups
             actor.Init(actorDefinition);

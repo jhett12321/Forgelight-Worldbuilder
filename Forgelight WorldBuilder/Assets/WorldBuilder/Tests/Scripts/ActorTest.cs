@@ -1,6 +1,7 @@
 ﻿namespace WorldBuilder.Tests.Scripts
 {
     using Objects;
+    using Terrain;
     using UnityEngine;
     using Zenject;
 
@@ -9,9 +10,11 @@
     {
         [Inject] private GameManager gameManager;
         [Inject] private ActorFactory actorFactory;
+        [Inject] private TerrainFactory terrainFactory;
 
         public string gamePath;
         public string actorDefName;
+        public string terrainZoneName;
 
         private void Awake()
         {
@@ -19,9 +22,10 @@
             gameManager.OnGameLoaded += OnGameLoaded;
         }
 
-        private void OnGameLoaded(ForgelightGame game)
+        private void OnGameLoaded()
         {
-            actorFactory.CreateActor(actorDefName);
+            // actorFactory.CreateActor(actorDefName);
+            terrainFactory.LoadZoneTerrain(terrainZoneName);
         }
     }
 }

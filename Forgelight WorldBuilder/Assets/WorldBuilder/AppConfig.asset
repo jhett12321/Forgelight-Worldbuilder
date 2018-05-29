@@ -12,3 +12,5 @@ MonoBehaviour:
   m_Name: AppConfig
   m_EditorClassIdentifier: 
   ActorSharedMaterial: {fileID: 2100000, guid: c8328df0484ce0c49a48a60cdab21043, type: 2}
+  TerrainSharedMaterial: {fileID: 2100000, guid: b595b53509d9df94092a474a8c77c6ec,
+    type: 2}

@@ -1,5 +1,6 @@
 ﻿namespace WorldBuilder.Formats.Adr
 {
+    using System;
     using System.Collections.Generic;
     using System.Xml;
     using System.Xml.Linq;
@@ -31,21 +32,14 @@
 
             XElement root;
 
-            try
+            using (XmlReader xr = XmlReader.Create(stream, settings))
             {
-                using (XmlReader xr = XmlReader.Create(stream, settings))
+                if (!xr.Read())
                 {
-                    if (!xr.Read())
-                    {
-                        return false;
-                    }
-
-                    root = XElement.Load(xr.ReadSubtree());
+                    return false;
                 }
-            }
-            catch
-            {
-                return false;
+
+                root = XElement.Load(xr.ReadSubtree());
             }
 
             IsPlaceable = true;

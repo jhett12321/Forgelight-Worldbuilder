@@ -128,7 +128,7 @@
             // Header
             string magic = stream.ReadString(3);
 
-            Assert.AreNotEqual(MAGIC, magic, "Chunk header mismatch!");
+            Assert.AreEqual(MAGIC, magic, "Chunk header mismatch!");
 
             int lodLevel = Convert.ToInt32(stream.ReadString(1));
 

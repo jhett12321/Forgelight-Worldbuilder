@@ -13,7 +13,7 @@
     /// <summary>
     /// Creates Unity-Compatible Meshes from Forgelight Model data.
     /// </summary>
-    public class MeshFactory
+    public class ActorMeshFactory
     {
         [Inject] private MaterialDefinitionManager materialDefinitionManager;
 
@@ -40,7 +40,7 @@
                 ProcessMesh(modelData, meshData, verts, uvs);
             }
 
-            // Apply the Verts and UVs to the mesh
+            // Apply the Verts to the mesh
             mesh.SetVertices(verts);
 
             // Triangles
@@ -58,6 +58,7 @@
 
             mesh.SetUVs(0, uvs);
             mesh.RecalculateNormals();
+            mesh.UploadMeshData(true);
 
             return mesh;
         }

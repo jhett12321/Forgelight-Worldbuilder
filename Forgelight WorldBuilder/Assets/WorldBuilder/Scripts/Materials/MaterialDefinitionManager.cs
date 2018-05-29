@@ -1,6 +1,8 @@
 ﻿namespace WorldBuilder.Materials
 {
+    using System;
     using System.Linq;
+    using System.Threading.Tasks;
     using Formats.Dma;
     using Formats.Dme;
     using Zenject;
@@ -8,7 +10,7 @@
     /// <summary>
     /// Provides lookup utilities for MaterialDefinitions and VertexLayouts.
     /// </summary>
-    public class MaterialDefinitionManager
+    public class MaterialDefinitionManager : IEditorLoadable
     {
         // Dependencies
         [Inject] private AssetManager assetManager;
@@ -17,15 +19,15 @@
 
         private MaterialDefinitions materialDefinitions { get; set; }
 
-        [Inject]
-        public MaterialDefinitionManager(GameManager gameManager)
-        {
-            gameManager.OnGameLoaded += OnNewGameLoaded;
-        }
+        public string TaskName => "Loading Material Definitions";
 
-        private void OnNewGameLoaded(ForgelightGame game)
+        public Task LoadSystem(IProgress<int> progress)
         {
-            materialDefinitions = assetManager.LoadPackAsset<MaterialDefinitions>(MATERIALS_ASSET);
+            return Task.Run(() =>
+            {
+                materialDefinitions = assetManager.LoadPackAsset<MaterialDefinitions>(MATERIALS_ASSET);
+                progress.Report(100);
+            });
         }
 
         /// <summary>

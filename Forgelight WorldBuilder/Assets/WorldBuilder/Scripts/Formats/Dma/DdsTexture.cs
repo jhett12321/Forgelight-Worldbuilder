@@ -27,8 +27,6 @@
 
         public bool Deserialize(BinaryStream stream)
         {
-            Assert.IsTrue(Name.EndsWith(".dds"), "The texture provided is not a DDS file!");
-
             // Header
             stream.Seek(4, SeekOrigin.Begin);
 
@@ -49,15 +47,15 @@
             string texFormat = stream.ReadString(4);
             switch (texFormat)
             {
-                    case "DXT5":
-                        TextureFormat = TextureFormat.DXT5;
-                        break;
-                    case "DXT1":
-                        TextureFormat = TextureFormat.DXT1;
-                        break;
-                    default:
-                        Debug.LogWarning("Unknown Texture type: " + texFormat);
-                        break;
+                case "DXT5":
+                    TextureFormat = TextureFormat.DXT5;
+                    break;
+                case "DXT1":
+                    TextureFormat = TextureFormat.DXT1;
+                    break;
+                default:
+                    Debug.LogWarning("Unknown Texture type: " + texFormat);
+                    break;
             }
 
             // Texture Data

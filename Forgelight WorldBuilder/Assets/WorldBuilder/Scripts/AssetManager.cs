@@ -28,6 +28,11 @@
         /// <returns>The deserialized asset instance.</returns>
         public T LoadPackAsset<T>(string assetName) where T : IReadableAsset, new()
         {
+            if (assetName == null)
+            {
+                return default(T);
+            }
+
             Pack[] packs = gameManager.ActiveGame.Packs;
 
             Assert.IsNotNull(packs);

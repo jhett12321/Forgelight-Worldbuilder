@@ -47,14 +47,17 @@
             if (diffuseTex != null)
             {
                 material.SetTexture("_MainTex", diffuseTex);
+                material.SetTextureScale("_MainTex", new Vector2(1, -1));
             }
             if (packedSpecTex != null)
             {
                 material.SetTexture("_PackedSpecular", packedSpecTex);
+                material.SetTextureScale("_PackedSpecular", new Vector2(1, -1));
             }
             if (normalTex != null)
             {
                 material.SetTexture("_BumpMap", normalTex);
+                material.SetTextureScale("_BumpMap", new Vector2(1, -1));
             }
 
             return material;
@@ -79,7 +82,7 @@
 
             Texture2D texture = new Texture2D(textureData.Width, textureData.Height, textureData.TextureFormat, true);
             texture.LoadRawTextureData(textureData.TextureData);
-            texture.Apply();
+            texture.Apply(true, true);
 
             return texture;
         }

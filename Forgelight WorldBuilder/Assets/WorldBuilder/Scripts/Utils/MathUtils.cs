@@ -63,6 +63,7 @@
             {
                 rotX = -rot.y;
                 rotY = rot.x;
+                rot.z = -rot.z;
             }
 
             float rotZ = -rot.z;

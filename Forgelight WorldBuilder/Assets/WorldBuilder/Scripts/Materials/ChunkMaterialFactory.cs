@@ -1,5 +1,6 @@
 ﻿namespace WorldBuilder.Materials
 {
+    using System;
     using Formats.Cnk;
     using Formats.Dma;
     using UnityEngine;
@@ -34,18 +35,21 @@
 
                 diffuseTex.LoadRawTextureData(diffuse.TextureData);
                 specTex.LoadRawTextureData(spec.TextureData);
+
                 diffuseTextures[i] = diffuseTex;
                 specTextures[i] = specTex;
             }
 
             Texture2D materialDiffuse = new Texture2D(1024, 1024);
-            materialDiffuse.PackTextures(diffuseTextures, 0);
+            materialDiffuse.PackTextures(diffuseTextures, 0, 2048, true);
 
             Texture2D materialSpec = new Texture2D(1024, 1024);
-            materialSpec.PackTextures(specTextures, 0);
+            materialSpec.PackTextures(specTextures, 0, 2048, true);
 
             material.SetTexture("_MainTex", materialDiffuse);
+            material.SetTextureScale("_MainTex", new Vector2(1, -1));
             material.SetTexture("_PackedSpecular", materialSpec);
+            material.SetTextureScale("_PackedSpecular", new Vector2(1, -1));
 
             return material;
         }

@@ -71,10 +71,36 @@
             return actorInstance;
         }
 
-        private ForgelightActor LoadNewActor(Adr actorDefinition)
+        /// <summary>
+        /// Attempts to find a compatible DME associated with the actor definition.
+        /// </summary>
+        private Dme GetActorDme(Adr actorDefinition)
         {
             Dme modelDef = assetManager.LoadPackAsset<Dme>(actorDefinition.Base);
+            if (modelDef != null)
+            {
+                return modelDef;
+            }
+
+            Debug.LogWarningFormat("Could not use base model for actor \"{0}\". Attempting to use LOD model instead.", actorDefinition.DisplayName);
+            foreach (Lod lod in actorDefinition.Lods)
+            {
+                modelDef = assetManager.LoadPackAsset<Dme>(lod.FileName);
+                if (modelDef != null)
+                {
+                    break;
+                }
+            }
+
+            return modelDef;
+        }
+
+        private ForgelightActor LoadNewActor(Adr actorDefinition)
+        {
             ForgelightActor actor;
+
+            // Attempt to find the model's Dme.
+            Dme modelDef = GetActorDme(actorDefinition);
 
             if (modelDef == null)
             {

@@ -1,10 +1,10 @@
 ﻿namespace WorldBuilder.Materials
 {
-    using System;
     using System.Linq;
     using System.Threading.Tasks;
     using Formats.Dma;
     using Formats.Dme;
+    using WorldEditor;
     using Zenject;
 
     /// <summary>
@@ -19,15 +19,11 @@
 
         private MaterialDefinitions materialDefinitions { get; set; }
 
-        public string TaskName => "Loading Material Definitions";
-
-        public Task LoadSystem(IProgress<int> progress)
+        public async Task LoadSystem(StatusReporter progress)
         {
-            return Task.Run(() =>
-            {
-                materialDefinitions = assetManager.LoadPackAsset<MaterialDefinitions>(MATERIALS_ASSET);
-                progress.Report(100);
-            });
+            await new WaitForBackgroundThread();
+            materialDefinitions = assetManager.LoadPackAsset<MaterialDefinitions>(MATERIALS_ASSET);
+            progress.ReportProgress("Loading Material Definitions", 1, 1);
         }
 
         /// <summary>

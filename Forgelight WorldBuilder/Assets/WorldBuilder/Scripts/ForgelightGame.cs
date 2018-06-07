@@ -5,6 +5,7 @@
     using System.Threading.Tasks;
     using Formats.Pack;
     using Syroot.BinaryData;
+    using WorldEditor;
 
     /// <summary>
     /// Represents a loaded Forgelight Game.
@@ -22,31 +23,39 @@
             this.packDir = packDir;
         }
 
-        public Task LoadPacks(IProgress<int> progress)
+        public async Task LoadPacks(StatusReporter progress)
         {
-            return Task.Run(() =>
+            string[] packPaths = Directory.GetFiles(packDir, "*.pack", SearchOption.TopDirectoryOnly);
+            Packs = new Pack[packPaths.Length];
+            Task<Pack>[] packTasks = new Task<Pack>[packPaths.Length];
+
+            for (int i = 0; i < packPaths.Length; i++)
             {
-                string[] packPaths = Directory.GetFiles(packDir, "*.pack", SearchOption.TopDirectoryOnly);
-                Packs = new Pack[packPaths.Length];
+                string path = packPaths[i];
+                packTasks[i] = LoadPack(path);
+            }
 
-                for (int i = 0; i < packPaths.Length; i++)
-                {
-                    string path = packPaths[i];
-                    FileStream fStream = File.OpenRead(path); // Disposed by BinaryStream.
-                    using (BinaryStream binaryStream = new BinaryStream(fStream))
-                    {
-                        Pack pack = new Pack(path);
-                        binaryStream.ByteConverter = pack.ByteConverter;
+            for (int i = 0; i < packTasks.Length; i++)
+            {
+                Packs[i] = await packTasks[i];
+                progress.ReportProgress("Loading Packs", i, packPaths.Length);
+            }
+        }
 
-                        pack.Deserialize(binaryStream);
+        public async Task<Pack> LoadPack(string path)
+        {
+            await new WaitForBackgroundThread();
 
-                        Packs[i] = pack;
-                    }
+            FileStream fStream = File.OpenRead(path); // Disposed by BinaryStream.
+            using (BinaryStream binaryStream = new BinaryStream(fStream))
+            {
+                Pack pack = new Pack(path);
+                binaryStream.ByteConverter = pack.ByteConverter;
 
-                    progress.Report(i * 100 / packPaths.Length);
-                }
-            });
+                pack.Deserialize(binaryStream);
 
+                return pack;
+            }
         }
     }
 }

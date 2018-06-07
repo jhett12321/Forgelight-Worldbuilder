@@ -9,8 +9,9 @@
     using UnityEngine;
     using UnityEngine.Assertions;
     using Utils;
+    using Utils.Pools;
 
-    public class CnkLOD : IReadableAsset, IPoolable
+    public class CnkLOD : IReadableAsset, IPoolResetable
     {
         public ByteConverter ByteConverter => ByteConverter.Little;
         public string Name { get; set; }
@@ -27,19 +28,19 @@
         public uint CompressedSize { get; private set; }
 
         // Buffers
-        public byte[] CompressedBuffer = new byte[0];
-        public byte[] DecompressedBuffer = new byte[0];
+        public Buffer<byte> CompressedBuffer = new Buffer<byte>();
+        public Buffer<byte>  DecompressedBuffer = new Buffer<byte>();
 
         //Textures
-        public List<Texture> Textures { get; private set; }
+        public Buffer<Texture> Textures = new Buffer<Texture>();
         public class Texture
         {
-            public List<byte> ColorNXMap { get; set; }
-            public List<byte> SpecNyMap { get; set; }
-            public List<byte> ExtraData1 { get; set; }
-            public List<byte> ExtraData2 { get; set; }
-            public List<byte> ExtraData3 { get; set; }
-            public List<byte> ExtraData4 { get; set; }
+            public readonly Buffer<byte> ColorNXMap = new Buffer<byte>();
+            public readonly Buffer<byte> SpecNyMap = new Buffer<byte>();
+            public readonly Buffer<byte> ExtraData1 = new Buffer<byte>();
+            public readonly Buffer<byte> ExtraData2 = new Buffer<byte>();
+            public readonly Buffer<byte> ExtraData3 = new Buffer<byte>();
+            public readonly Buffer<byte> ExtraData4 = new Buffer<byte>();
         }
 
         //Verts per side
@@ -101,7 +102,6 @@
 
         public CnkLOD()
         {
-            Textures = new List<Texture>();
             Indices = new List<ushort>();
             Vertices = new List<Vertex>();
             RenderBatches = new List<RenderBatch>();
@@ -113,7 +113,6 @@
 
         public void Reset()
         {
-            Textures.Clear();
             Indices.Clear();
             Vertices.Clear();
             RenderBatches.Clear();
@@ -147,23 +146,15 @@
             DecompressedSize = stream.ReadUInt32();
             CompressedSize   = stream.ReadUInt32();
 
-            // Decompression
-            // Make sure our buffers are large enough.
-            if (CompressedBuffer.Length < CompressedSize)
-            {
-                Array.Resize(ref CompressedBuffer, (int) CompressedSize);
-            }
-
-            if (DecompressedBuffer.Length < DecompressedSize)
-            {
-                Array.Resize(ref DecompressedBuffer, (int) DecompressedSize);
-            }
-
             // Read the compressed buffer.
-            stream.Read(CompressedBuffer, 0, (int) CompressedSize);
+            stream.ReadBytes(CompressedBuffer, (int)CompressedSize);
+
+            // Decompression
+            // Make sure our buffer is large enough.
+            DecompressedBuffer.PrepareBuffer((int) DecompressedSize);
 
             // Perform decompression using Lzham.
-            InflateReturnCode result = LzhamInterop.DecompressForgelightData(CompressedBuffer, CompressedSize, DecompressedBuffer, DecompressedSize);
+            InflateReturnCode result = LzhamInterop.DecompressForgelightData(CompressedBuffer.Data, CompressedSize, DecompressedBuffer.Data, DecompressedSize);
 
             if (result != InflateReturnCode.LZHAM_Z_STREAM_END && result != InflateReturnCode.LZHAM_Z_OK)
             {
@@ -171,52 +162,39 @@
                 return false;
             }
 
-            using (MemoryStream decompressedStream = new MemoryStream(DecompressedBuffer, 0, (int) DecompressedSize))
+            using (MemoryStream decompressedStream = new MemoryStream(DecompressedBuffer.Data, 0, (int) DecompressedSize))
             {
                 //Textures
                 uint textureCount = decompressedStream.ReadUInt32();
+                Textures.PrepareBuffer((int)textureCount);
 
                 for (int i = 0; i < textureCount; i++)
                 {
-                    Texture texture = new Texture();
+                    Texture texture = Textures[i];
+
+                    if (texture == null)
+                    {
+                        texture = new Texture();
+                        Textures[i] = texture;
+                    }
 
                     uint colorNxMapSize = decompressedStream.ReadUInt32();
-                    if (colorNxMapSize > 0)
-                    {
-                        texture.ColorNXMap = decompressedStream.ReadBytes((int) colorNxMapSize).ToList();
-                    }
+                    decompressedStream.ReadBytes(texture.ColorNXMap, (int)colorNxMapSize);
 
                     uint specNyMapSize = decompressedStream.ReadUInt32();
-                    if (specNyMapSize > 0)
-                    {
-                        texture.SpecNyMap = decompressedStream.ReadBytes((int) specNyMapSize).ToList();
-                    }
+                    decompressedStream.ReadBytes(texture.SpecNyMap, (int)specNyMapSize);
 
                     uint extraData1Size = decompressedStream.ReadUInt32();
-                    if (extraData1Size > 0)
-                    {
-                        texture.ExtraData1 = decompressedStream.ReadBytes((int) extraData1Size).ToList();
-                    }
+                    decompressedStream.ReadBytes(texture.ExtraData1, (int)extraData1Size);
 
                     uint extraData2Size = decompressedStream.ReadUInt32();
-                    if (extraData2Size > 0)
-                    {
-                        texture.ExtraData2 = decompressedStream.ReadBytes((int) extraData2Size).ToList();
-                    }
+                    decompressedStream.ReadBytes(texture.ExtraData2, (int)extraData2Size);
 
                     uint extraData3Size = decompressedStream.ReadUInt32();
-                    if (extraData3Size > 0)
-                    {
-                        texture.ExtraData3 = decompressedStream.ReadBytes((int) extraData3Size).ToList();
-                    }
+                    decompressedStream.ReadBytes(texture.ExtraData3, (int)extraData3Size);
 
                     uint extraData4Size = decompressedStream.ReadUInt32();
-                    if (extraData4Size > 0)
-                    {
-                        texture.ExtraData4 = decompressedStream.ReadBytes((int) extraData4Size).ToList();
-                    }
-
-                    Textures.Add(texture);
+                    decompressedStream.ReadBytes(texture.ExtraData4, (int)extraData4Size);
                 }
 
                 //Verts Per Side

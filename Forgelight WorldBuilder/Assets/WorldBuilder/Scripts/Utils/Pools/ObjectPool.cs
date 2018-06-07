@@ -1,31 +1,33 @@
-﻿namespace WorldBuilder.Utils
+﻿namespace WorldBuilder.Utils.Pools
 {
     using System.Collections.Concurrent;
     using System.Threading;
 
-    public interface IPoolable
+    public interface IPoolResetable
     {
-        /// <summary>
-        ///     Called when the object is returned to the pool.
-        /// </summary>
         void Reset();
     }
 
+    public abstract class ObjectPool
+    {
+        public int ActiveInstances;
+        public abstract int TotalObjects { get; }
+        public abstract int Capacity { get; set; }
+    }
+
     /// <summary>
-    ///     A simple generic object pool. Thread Safe.
+    /// A simple generic object pool. Thread Safe.
     /// </summary>
     /// <typeparam name="T">The type of object pool.</typeparam>
-    public class ObjectPool<T> where T : IPoolable, new()
+    public class ObjectPool<T> : ObjectPool where T : new()
     {
-        public  int ActiveInstances;
         private int capacity;
+        private bool capacityDefined;
 
-        private bool             capacityDefined;
-        public  ConcurrentBag<T> PooledItems = new ConcurrentBag<T>();
+        public ConcurrentStack<T> PooledItems = new ConcurrentStack<T>();
 
-        public int TotalObjects => ActiveInstances + PooledItems.Count;
-
-        public int Capacity
+        public override int TotalObjects => ActiveInstances + PooledItems.Count;
+        public override int Capacity
         {
             get { return capacity; }
             set
@@ -55,18 +57,18 @@
         {
             for (int i = 0; i < startAmount; i++)
             {
-                PooledItems.Add(new T());
+                PooledItems.Push(new T());
             }
         }
 
         /// <summary>
-        ///     Finds an existing pooled object, or creates a new one if none are available
+        /// Finds an existing pooled object, or creates a new one if none are available
         /// </summary>
         /// <returns>A pooled object, or the default value if no pooled objects are available, and the pool has reached capacity.</returns>
-        public T GetPooledObject()
+        public T Create()
         {
             T pooledItem;
-            PooledItems.TryTake(out pooledItem);
+            PooledItems.TryPop(out pooledItem);
 
             if (pooledItem == null)
             {
@@ -83,13 +85,15 @@
         }
 
         /// <summary>
-        ///     Returns an existing active instance back to the pool.
+        /// Returns an existing active instance back to the pool.
         /// </summary>
         /// <param name="instance"></param>
-        public void ReturnObjectToPool(T instance)
+        public void Dispose(T instance)
         {
-            instance.Reset();
-            PooledItems.Add(instance);
+            IPoolResetable resetable = instance as IPoolResetable;
+            resetable?.Reset();
+
+            PooledItems.Push(instance);
             Interlocked.Decrement(ref ActiveInstances);
         }
     }

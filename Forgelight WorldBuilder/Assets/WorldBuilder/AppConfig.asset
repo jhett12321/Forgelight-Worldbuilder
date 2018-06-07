@@ -13,6 +13,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MissingActorPrefab: {fileID: 114701412858306608, guid: 3ea8f356c6c7bd24994c35ff23103562,
     type: 2}
+  StatusBarPrefab: {fileID: 1452770112725594, guid: 0ce0cb528264f4648bd08f964c5184ba,
+    type: 2}
   ActorSharedMaterial: {fileID: 2100000, guid: c8328df0484ce0c49a48a60cdab21043, type: 2}
   TerrainSharedMaterial: {fileID: 2100000, guid: b595b53509d9df94092a474a8c77c6ec,
     type: 2}

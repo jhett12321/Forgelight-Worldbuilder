@@ -1,16 +1,16 @@
 ﻿namespace WorldBuilder.Formats.Adr
 {
-    using System;
     using System.Collections.Generic;
     using System.Xml;
     using System.Xml.Linq;
     using Syroot.BinaryData;
     using UnityEngine;
+    using Utils.Pools;
 
     /// <summary>
     /// Represents the Actor Definitions XML File.
     /// </summary>
-    public class Adr : IReadableAsset
+    public class Adr : IReadableAsset, IPoolResetable
     {
         public ByteConverter ByteConverter => ByteConverter.Little;
         public string Name { get; set; }
@@ -19,7 +19,7 @@
         public string Base { get; private set; }
         public string MaterialType { get; private set; }
 
-        public List<Lod> Lods { get; private set; }
+        public List<Lod> Lods { get; } = new List<Lod>();
 
         public bool IsPlaceable { get; private set; }
 
@@ -43,7 +43,6 @@
             }
 
             IsPlaceable = true;
-            Lods = new List<Lod>();
 
             foreach (XElement child in root.Elements())
             {
@@ -98,6 +97,11 @@
             }
 
             return true;
+        }
+
+        public void Reset()
+        {
+            Lods.Clear();
         }
     }
 }

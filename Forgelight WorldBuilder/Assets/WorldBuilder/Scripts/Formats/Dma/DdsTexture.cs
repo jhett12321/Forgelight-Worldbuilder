@@ -4,6 +4,7 @@
     using Syroot.BinaryData;
     using UnityEngine;
     using UnityEngine.Assertions;
+    using Utils;
 
     /// <summary>
     /// Represents a DDS compressed texture.
@@ -23,7 +24,7 @@
         // Texture Data
         public int Height;
         public int Width;
-        public byte[] TextureData;
+        public Buffer<byte> TextureData = new Buffer<byte>();
 
         public bool Deserialize(BinaryStream stream)
         {
@@ -60,7 +61,7 @@
 
             // Texture Data
             stream.Seek(HEADER_LENGTH, SeekOrigin.Begin);
-            TextureData = stream.ReadBytes((int)(stream.Length - HEADER_LENGTH));
+            stream.ReadBytes(TextureData, (int)stream.Length - HEADER_LENGTH);
 
             return true;
         }

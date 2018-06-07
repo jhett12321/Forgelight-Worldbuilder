@@ -2,13 +2,13 @@
 {
     using System;
     using System.Threading.Tasks;
+    using WorldEditor;
 
     /// <summary>
     /// Represents a system that must finish loading before the editor can allow interactions.
     /// </summary>
     public interface IEditorLoadable
     {
-        string TaskName { get; }
-        Task LoadSystem(IProgress<int> progress);
+        Task LoadSystem(StatusReporter reporter);
     }
 }

@@ -8,12 +8,13 @@
     using UnityEngine.Assertions;
     using Utils;
     using Utils.Cryptography;
+    using Utils.Pools;
     using Material = Dma.Material;
 
     /// <summary>
     /// Represents a Forgelight Model (DME) file.
     /// </summary>
-    public class Dme : IReadableAsset, IPoolable
+    public class Dme : IReadableAsset, IPoolResetable
     {
         public ByteConverter ByteConverter => ByteConverter.Little;
 

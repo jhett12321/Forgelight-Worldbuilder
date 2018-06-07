@@ -6,6 +6,7 @@
     using System.Threading.Tasks;
     using SFB;
     using UnityEngine;
+    using WorldEditor;
     using Zenject;
 
     /// <summary>
@@ -18,6 +19,7 @@
         public ForgelightGame ActiveGame { get; private set; }
 
         [Inject] private List<IEditorLoadable> loadables;
+        [Inject] private StatusReporter statusReporter;
         public event Action OnGameLoaded;
 
         public void SwitchGame()
@@ -43,15 +45,14 @@
                 try
                 {
                     ActiveGame = new ForgelightGame(Path.GetDirectoryName(path), packPath);
-                    int lastProgress = 0;
 
-                    await ActiveGame.LoadPacks(new Progress<int>(progress => DisplayProgress("Loading Pack Files", ref lastProgress, progress)));
+                    await ActiveGame.LoadPacks(statusReporter);
 
                     Task[] loadTasks = new Task[loadables.Count];
                     for (int i = 0; i < loadables.Count; i++)
                     {
                         IEditorLoadable editorLoadable = loadables[i];
-                        loadTasks[i] = editorLoadable.LoadSystem(new Progress<int>(progress => DisplayProgress(editorLoadable.TaskName, ref lastProgress, progress)));
+                        loadTasks[i] = editorLoadable.LoadSystem(statusReporter);
                     }
 
                     foreach (Task task in loadTasks)
@@ -67,15 +68,6 @@
                     throw;
                 }
             });
-        }
-
-        private void DisplayProgress(string taskName, ref int lastProgress, int progress)
-        {
-            if (progress != lastProgress)
-            {
-                Debug.LogFormat("{0}: {1}%", taskName, progress);
-                lastProgress = progress;
-            }
         }
     }
 }

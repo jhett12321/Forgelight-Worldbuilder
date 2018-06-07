@@ -2,6 +2,7 @@
 {
     using System.IO;
     using Syroot.BinaryData;
+    using Utils.Pools;
 
     public interface IAsset
     {

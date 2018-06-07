@@ -43,7 +43,7 @@
             DisplayName = System.IO.Path.GetFileNameWithoutExtension(path);
         }
 
-        public MemoryStream CreateAssetStreamByName(string name)
+        public AssetStream CreateAssetStreamByName(string name)
         {
             AssetRef assetRef;
 
@@ -55,19 +55,12 @@
             return CreateAssetStream(assetRef);
         }
 
-        public MemoryStream CreateAssetStream(AssetRef assetRef)
+        public AssetStream CreateAssetStream(AssetRef assetRef)
         {
             Assert.IsNotNull(assetRef, "No asset reference was provided!");
 
             FileStream file = File.Open(assetRef.Pack.Path, FileMode.Open, FileAccess.Read, FileShare.Read);
-            byte[] buffer = new byte[assetRef.Size];
-
-            file.Seek(assetRef.AbsoluteOffset, SeekOrigin.Begin);
-            file.Read(buffer, 0, (int) assetRef.Size);
-
-            MemoryStream memoryStream = new MemoryStream(buffer);
-
-            return memoryStream;
+            return new AssetStream(file, assetRef);
         }
 
         public override string ToString() => Name;

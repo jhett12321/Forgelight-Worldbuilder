@@ -1,10 +1,10 @@
 ﻿namespace WorldBuilder.Objects
 {
-    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Formats.Adr;
     using Formats.Pack;
+    using WorldEditor;
     using Zenject;
 
     public class ActorDefinitionManager : IEditorLoadable
@@ -13,27 +13,24 @@
 
         private readonly Dictionary<string, Adr> actorDefinitions = new Dictionary<string, Adr>();
 
-        public string TaskName => "Loading Actor Definitions";
-        public Task LoadSystem(IProgress<int> progress)
+        public async Task LoadSystem(StatusReporter reporter)
         {
+            await new WaitForBackgroundThread();
             actorDefinitions.Clear();
 
-            return Task.Run(() =>
+            AssetRef[] actorDefs = assetManager.GetAssetsByType(AssetType.ADR);
+
+            for (int i = 0; i < actorDefs.Length; i++)
             {
-                AssetRef[] actorDefs = assetManager.GetAssetsByType(AssetType.ADR);
-
-                for (int i = 0; i < actorDefs.Length; i++)
+                AssetRef assetRef = actorDefs[i];
+                Adr adr = assetManager.CreateAsset<Adr>(assetRef);
+                if (adr != null)
                 {
-                    AssetRef assetRef = actorDefs[i];
-                    Adr adr = assetManager.CreateAsset<Adr>(assetRef);
-                    if (adr != null)
-                    {
-                        actorDefinitions.Add(adr.Name, adr);
-                    }
-
-                    progress.Report(i * 100 / actorDefs.Length);
+                    actorDefinitions.Add(adr.Name, adr);
                 }
-            });
+
+                reporter.ReportProgress("Loading Actor Definitions", i, actorDefs.Length);
+            }
         }
 
         public Adr GetDefinition(string name)

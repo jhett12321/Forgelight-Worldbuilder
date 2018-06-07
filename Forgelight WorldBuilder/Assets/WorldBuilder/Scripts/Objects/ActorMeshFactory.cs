@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
     using Formats.Dma;
     using Formats.Dme;
     using Materials;
@@ -25,45 +26,63 @@
         /// </summary>
         /// <param name="modelData">The source model.</param>
         /// <returns></returns>
-        public UnityEngine.Mesh CreateMeshFromDme(Dme modelData)
+        public async Task<UnityEngine.Mesh> CreateMeshFromDme(Dme modelData)
         {
-            UnityEngine.Mesh mesh = new UnityEngine.Mesh();
-            mesh.name = modelData.Name;
-            mesh.subMeshCount = modelData.Meshes.Count;
-
-            List<Vector3> verts = new List<Vector3>();
-            List<Vector2> uvs = new List<Vector2>();
+            await new WaitForBackgroundThread();
+            uint totalVerts = 0;
 
             // Verts and UVs
             foreach (Mesh meshData in modelData.Meshes)
             {
-                ProcessMesh(modelData, meshData, verts, uvs);
+                totalVerts += meshData.VertexCount;
             }
 
-            // Apply the Verts to the mesh
-            mesh.SetVertices(verts);
+            Vector3[] verts = new Vector3[totalVerts];
+            Vector2[] uvs = new Vector2[totalVerts];
+
+            int offset = 0;
+            foreach (Mesh meshData in modelData.Meshes)
+            {
+                ProcessMesh(offset, modelData, meshData, verts, uvs);
+                offset += (int)meshData.VertexCount;
+            }
 
             // Triangles
+            int[][] triangles = new int[modelData.Meshes.Count][];
             uint vertCount = 0;
             for (int i = 0; i < modelData.Meshes.Count; i++)
             {
                 Mesh meshData = modelData.Meshes[i];
 
-                mesh.indexFormat = GetIndexFormat(meshData);
-                int[] triangles = GetMeshTriangles(meshData, vertCount);
-                mesh.SetTriangles(triangles, i);
+
+                triangles[i] = GetMeshTriangles(meshData, vertCount);
 
                 vertCount += meshData.VertexCount;
             }
 
-            mesh.SetUVs(0, uvs);
+            // Apply the loaded data to the mesh.
+            await new WaitForUpdate();
+
+            UnityEngine.Mesh mesh = new UnityEngine.Mesh();
+            mesh.name = modelData.Name;
+            mesh.subMeshCount = modelData.Meshes.Count;
+
+            mesh.vertices = verts;
+            mesh.uv = uvs;
+
+            mesh.indexFormat = GetIndexFormat(modelData.Meshes[0]);
+            for (int i = 0; i < triangles.Length; i++)
+            {
+                mesh.SetTriangles(triangles[i], i);
+            }
+
             mesh.RecalculateNormals();
             mesh.UploadMeshData(true);
 
             return mesh;
         }
 
-        private void ProcessMesh(Dme modelData, Mesh meshData, List<Vector3> verts, List<Vector2> uvs)
+        private void ProcessMesh(int offset, Dme modelData, Mesh meshData, Vector3[] verts, Vector2[] uvs)
         {
             uint materialHash = modelData.Materials[(int)meshData.MaterialIndex].MaterialDefinitionHash;
             MaterialDefinition materialDefinition = materialDefinitionManager.GetMaterial(materialHash);
@@ -71,8 +90,8 @@
             uint vertexLayoutHash = materialDefinition.DrawStyles[DRAWSTYLE_INDEX].VertexLayoutNameHash;
             VertexLayout vertexLayout = materialDefinitionManager.GetVertexLayout(vertexLayoutHash);
 
-            GetMeshVerts(verts, meshData, vertexLayout);
-            uvs.AddRange(GetMeshUVs(meshData, vertexLayout));
+            GetMeshVerts(offset, verts, meshData, vertexLayout);
+            GetMeshUVs(offset, uvs, meshData, vertexLayout);
         }
 
         private IndexFormat GetIndexFormat(Mesh meshData)
@@ -122,7 +141,7 @@
         /// </summary>
         /// <param name="meshInstance"></param>
         /// <param name="meshData"></param>
-        private IEnumerable<Vector2> GetMeshUVs(Mesh meshData, VertexLayout vertexLayout)
+        private void GetMeshUVs(int offset, Vector2[] uvs, Mesh meshData, VertexLayout vertexLayout)
         {
             VertexLayout.Entry.DataTypes texCoord0DataType;
             int texCoord0Offset;
@@ -132,7 +151,7 @@
 
             if (!texCoord0Present)
             {
-                yield break;
+                return;
             }
 
             Mesh.VertexStream texCoord0Stream = meshData.VertexStreams[texCoord0StreamIndex];
@@ -151,13 +170,13 @@
                     }
                     case VertexLayout.Entry.DataTypes.float16_2:
                     {
-                        uv.x = Half.FromBytes(texCoord0Stream.Data, (i * texCoord0Stream.BytesPerVertex) + texCoord0Offset + 0);
-                        uv.y = 1.0f - Half.FromBytes(texCoord0Stream.Data, (i * texCoord0Stream.BytesPerVertex) + texCoord0Offset + 2);
+                        uv.x = Mathf.HalfToFloat(BitConverter.ToUInt16(texCoord0Stream.Data, (i * texCoord0Stream.BytesPerVertex) + texCoord0Offset + 0));
+                        uv.y = 1.0f - Mathf.HalfToFloat(BitConverter.ToUInt16(texCoord0Stream.Data, (i * texCoord0Stream.BytesPerVertex) + texCoord0Offset + 2));
                         break;
                     }
                 }
 
-                yield return uv;
+                uvs[offset + i] = uv;
             }
         }
 
@@ -167,7 +186,7 @@
         /// <param name="meshInstance"></param>
         /// <param name="meshData"></param>
         /// <param name="vertexLayout"></param>
-        private void GetMeshVerts(List<Vector3> verts, Mesh meshData, VertexLayout vertexLayout)
+        private void GetMeshVerts(int offset, Vector3[] verts, Mesh meshData, VertexLayout vertexLayout)
         {
             // Geometric Verts
             VertexLayout.Entry.DataTypes positionDataType;
@@ -180,7 +199,7 @@
 
             for (int i = 0; i < meshData.VertexCount; ++i)
             {
-                verts.Add(ReadVector3(positionOffset, positionStream, i));
+                verts[offset + i] = ReadVector3(positionOffset, positionStream, i);
             }
         }
 

@@ -1,6 +1,5 @@
 ﻿namespace WorldBuilder.Materials
 {
-    using System;
     using Formats.Cnk;
     using Formats.Dma;
     using UnityEngine;
@@ -27,17 +26,20 @@
             {
                 CnkLOD.Texture texture = chunkData.Textures[i];
 
-                DdsTexture diffuse = assetManager.CreateAsset<DdsTexture>(texture.ColorNXMap);
-                DdsTexture spec = assetManager.CreateAsset<DdsTexture>(texture.SpecNyMap);
+                DdsTexture diffuse = assetManager.CreateAsset<DdsTexture>(texture.ColorNXMap.Data);
+                DdsTexture spec = assetManager.CreateAsset<DdsTexture>(texture.SpecNyMap.Data);
 
                 Texture2D diffuseTex = new Texture2D(diffuse.Width, diffuse.Height, diffuse.TextureFormat, false);
                 Texture2D specTex = new Texture2D(spec.Width, spec.Height, spec.TextureFormat, false);
 
-                diffuseTex.LoadRawTextureData(diffuse.TextureData);
-                specTex.LoadRawTextureData(spec.TextureData);
+                diffuseTex.LoadRawTextureData(diffuse.TextureData.Data);
+                specTex.LoadRawTextureData(spec.TextureData.Data);
 
                 diffuseTextures[i] = diffuseTex;
                 specTextures[i] = specTex;
+
+                assetManager.Dispose(diffuse);
+                assetManager.Dispose(spec);
             }
 
             Texture2D materialDiffuse = new Texture2D(1024, 1024);

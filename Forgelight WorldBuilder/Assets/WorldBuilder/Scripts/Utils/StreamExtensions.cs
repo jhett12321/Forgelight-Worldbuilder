@@ -9,6 +9,18 @@
     /// </summary>
     public static class StreamExtensions
     {
+        /// <summary>
+        /// Reads bytes into an existing buffer, creating one, or enlarging the buffer if necessary.
+        /// </summary>
+        /// <param name="stream">The source stream</param>
+        /// <param name="buffer">The target buffer to read to.</param>
+        /// <param name="count">The number of bytes to read.</param>
+        public static void ReadBytes(this Stream stream, Buffer<byte> buffer, int count)
+        {
+            buffer.PrepareBuffer(count);
+            stream.Read(buffer.Data, 0, count);
+        }
+
         public static Vector2 ReadVector2(this Stream stream)
         {
             return new Vector2(stream.ReadSingle(), stream.ReadSingle());

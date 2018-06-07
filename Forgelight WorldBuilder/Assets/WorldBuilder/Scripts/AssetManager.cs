@@ -3,22 +3,18 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Linq;
     using Formats;
     using Formats.Pack;
     using Syroot.BinaryData;
     using UnityEngine;
     using UnityEngine.Assertions;
+    using Utils.Pools;
     using Zenject;
 
     public class AssetManager
     {
         [Inject] private GameManager gameManager;
-
-        public MemoryStream CreateAssetMemoryStreamByName(string assetName)
-        {
-            throw new NotImplementedException();
-        }
+        [Inject] private ObjectPooler objectPooler;
 
         /// <summary>
         /// Loads a Pack-stored asset from the current active forgelight game.
@@ -79,9 +75,9 @@
             return assets.ToArray();
         }
 
-        public T CreateAsset<T>(ICollection<byte> data, string name = null, string displayName = null) where T : IReadableAsset, new()
+        public T CreateAsset<T>(byte[] data, string name = null, string displayName = null) where T : IReadableAsset, new()
         {
-            MemoryStream stream = new MemoryStream(data.ToArray());
+            MemoryStream stream = new MemoryStream(data);
             return CreateAsset<T>(stream, name, displayName);
         }
 
@@ -93,14 +89,14 @@
         /// <returns>The deserialized asset, or null if deserialization failed.</returns>
         public T CreateAsset<T>(AssetRef asset) where T : IReadableAsset, new()
         {
-            MemoryStream stream = asset.Pack.CreateAssetStream(asset); // Disposed by BinaryStream.
+            AssetStream stream = asset.Pack.CreateAssetStream(asset); // Disposed by BinaryStream.
             return CreateAsset<T>(stream, asset.Name, asset.DisplayName);
         }
 
         public T CreateAsset<T>(Stream stream, string name = null, string displayName = null) where T : IReadableAsset, new()
         {
             bool result = false;
-            T retVal = new T();
+            T retVal = objectPooler.Create<T>();
 
             try
             {
@@ -116,6 +112,7 @@
             {
                 Debug.LogErrorFormat("An error occurred while creating asset \"{0}\" (See below for details)", name);
                 Debug.LogException(e);
+                Dispose(retVal);
             }
 
             // If we succeeded, we return the result, otherwise the default value (usually null).
@@ -132,6 +129,11 @@
         {
             FileStream fStream = File.OpenRead(path);
             return CreateAsset<T>(fStream, Path.GetFileName(path), Path.GetFileNameWithoutExtension(path));
+        }
+
+        public void Dispose<T>(T instance) where T : IReadableAsset, new()
+        {
+            objectPooler.Dispose(instance);
         }
     }
 }

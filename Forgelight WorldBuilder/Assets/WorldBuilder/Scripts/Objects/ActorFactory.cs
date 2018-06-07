@@ -1,6 +1,7 @@
 ﻿namespace WorldBuilder.Objects
 {
     using System.Collections.Generic;
+    using System.Threading.Tasks;
     using Formats.Adr;
     using Formats.Dme;
     using Materials;
@@ -44,25 +45,25 @@
             actorPoolParent.SetActive(false);
         }
 
-        public ForgelightActor CreateActor(string actorDefName)
+        public async Task<ForgelightActor> CreateActor(string actorDefName)
         {
             Adr actorDefinition = actorDefinitionManager.GetDefinition(actorDefName);
 
             if (actorDefinition != null)
             {
-                return CreateActor(actorDefinition);
+                return await CreateActor(actorDefinition);
             }
 
             Debug.LogWarning("Actor \"" + actorDefName + "\" does not exist!");
             return null;
         }
 
-        public ForgelightActor CreateActor(Adr actorDefinition)
+        public async Task<ForgelightActor> CreateActor(Adr actorDefinition)
         {
             ForgelightActor actorSource;
             if (!cachedActors.TryGetValue(actorDefinition.Name, out actorSource))
             {
-                actorSource = LoadNewActor(actorDefinition);
+                actorSource = await LoadNewActor(actorDefinition);
                 cachedActors[actorDefinition.Name] = actorSource;
             }
 
@@ -95,8 +96,9 @@
             return modelDef;
         }
 
-        private ForgelightActor LoadNewActor(Adr actorDefinition)
+        private async Task<ForgelightActor> LoadNewActor(Adr actorDefinition)
         {
+            await new WaitForBackgroundThread();
             ForgelightActor actor;
 
             // Attempt to find the model's Dme.
@@ -109,7 +111,9 @@
             else
             {
                 // Deserialization
-                UnityEngine.Mesh mesh = actorMeshFactory.CreateMeshFromDme(modelDef);
+                await new WaitForUpdate();
+
+                UnityEngine.Mesh mesh = await actorMeshFactory.CreateMeshFromDme(modelDef);
                 Material[] materials = materialFactory.GetActorMaterials(modelDef);
 
                 Assert.IsNotNull(mesh);
@@ -125,6 +129,8 @@
                 meshFilter.sharedMesh = mesh;
                 meshRenderer.sharedMaterials = materials;
             }
+
+            assetManager.Dispose(modelDef);
 
             // TODO LOD Groups
             actor.name = actorDefinition.DisplayName;

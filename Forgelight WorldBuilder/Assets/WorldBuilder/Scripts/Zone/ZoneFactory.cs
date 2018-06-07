@@ -1,12 +1,14 @@
 ﻿namespace WorldBuilder.Zone
 {
     using System.IO;
+    using System.Threading.Tasks;
     using Formats.Pack;
     using Formats.Zone;
     using Objects;
     using Terrain;
     using UnityEngine;
     using Utils;
+    using WorldEditor;
     using Zenject;
     using Object = Formats.Zone.Object;
 
@@ -17,11 +19,12 @@
         [Inject] private AssetManager assetManager;
         [Inject] private ActorFactory actorFactory;
         [Inject] private TerrainFactory terrainFactory;
+        [Inject] private StatusReporter statusReporter;
 
         private GameObject zoneObjects;
         private GameObject zoneTerrain;
 
-        public void LoadZoneFromPacks(string zoneName)
+        public async void LoadZoneFromPacks(string zoneName)
         {
             Zone zone = assetManager.LoadPackAsset<Zone>(zoneName);
             if (zone == null)
@@ -43,6 +46,8 @@
 
             LoadZoneObjects(zone);
             LoadZoneTerrain(zone);
+
+            assetManager.Dispose(zone);
         }
 
         private async void LoadZoneObjects(Zone zone)
@@ -54,14 +59,15 @@
                 Object zoneObject = zone.Objects[i];
                 foreach (Object.Instance instance in zoneObject.Instances)
                 {
-                    ForgelightActor actor = actorFactory.CreateActor(zoneObject.ActorDefinition);
+                    ForgelightActor actor = await actorFactory.CreateActor(zoneObject.ActorDefinition);
 
                     PrepareObject(actor, instance);
 
                     if (Time.realtimeSinceStartup - lastFrameTime > MAX_FRAME_TIME)
                     {
                         lastFrameTime = Time.realtimeSinceStartup;
-                        Debug.LogFormat("Loading Zone Objects ({0}/{1})", i, zone.Objects.Count);
+
+                        statusReporter.ReportProgress("Loading Zone Objects", i, zone.Objects.Count);
                         await new WaitForUpdate();
                     }
                 }
@@ -99,7 +105,7 @@
             for (int i = 0; i < assets.Length; i++)
             {
                 AssetRef assetRef = assets[i];
-                ForgelightChunk chunk = terrainFactory.CreateChunk(assetRef);
+                ForgelightChunk chunk = await terrainFactory.CreateChunk(assetRef);
 
                 if (chunk == null)
                 {
@@ -111,7 +117,7 @@
                 if (Time.realtimeSinceStartup - lastFrameTime > MAX_FRAME_TIME)
                 {
                     lastFrameTime = Time.realtimeSinceStartup;
-                    Debug.LogFormat("Loading Terrain Chunks ({0}/{1})", i, assets.Length);
+                    statusReporter.ReportProgress("Loading Terrain Chunks", i, assets.Length);
                     await new WaitForUpdate();
                 }
             }

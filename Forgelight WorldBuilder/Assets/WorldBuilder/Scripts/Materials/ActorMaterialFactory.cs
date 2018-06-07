@@ -16,6 +16,7 @@
         [Inject] private AssetManager assetManager;
         // TODO Use Material Definition Manager to map material definitions to recreated unity shaders.
         [Inject] private MaterialDefinitionManager materialDefinitionManager;
+        [Inject] private TextureManager textureManager;
 
         private Material source;
 
@@ -38,9 +39,9 @@
 
         private Material CreateMeshMaterial(Mesh mesh)
         {
-            Texture2D diffuseTex = CreateTexture(mesh.BaseDiffuse);
-            Texture2D packedSpecTex = CreateTexture(mesh.SpecMap);
-            Texture2D normalTex = CreateTexture(mesh.BumpMap);
+            Texture2D diffuseTex = textureManager.GetTexture(mesh.BaseDiffuse);
+            Texture2D packedSpecTex = textureManager.GetTexture(mesh.SpecMap);
+            Texture2D normalTex = textureManager.GetTexture(mesh.BumpMap);
 
             Material material = new Material(source);
 
@@ -61,30 +62,6 @@
             }
 
             return material;
-        }
-
-        private Texture2D CreateTexture(string textureName)
-        {
-            if (string.IsNullOrEmpty(textureName))
-            {
-                return null;
-            }
-
-            DdsTexture textureData = assetManager.LoadPackAsset<DdsTexture>(textureName);
-
-            if (textureData == null)
-            {
-                Debug.LogErrorFormat("Could not load texture \"{0}\"", textureName);
-                return null;
-            }
-
-            Assert.IsNotNull(textureData);
-
-            Texture2D texture = new Texture2D(textureData.Width, textureData.Height, textureData.TextureFormat, true);
-            texture.LoadRawTextureData(textureData.TextureData);
-            texture.Apply(true, true);
-
-            return texture;
         }
     }
 }

@@ -2,6 +2,7 @@
 {
     using System;
     using System.IO;
+    using System.Threading.Tasks;
     using Formats.Cnk;
     using Formats.Pack;
     using Materials;
@@ -17,8 +18,9 @@
         [Inject] private ChunkMeshFactory chunkMeshFactory;
         [Inject] private ChunkMaterialFactory materialFactory;
 
-        public ForgelightChunk CreateChunk(AssetRef assetRef)
+        public async Task<ForgelightChunk> CreateChunk(AssetRef assetRef)
         {
+            await new WaitForBackgroundThread();
             string chunkName = Path.GetFileNameWithoutExtension(assetRef.Name);
 
             // Mesh
@@ -26,21 +28,24 @@
             Assert.IsNotNull(chunkData);
 
             // Deserialization
+            await new WaitForUpdate();
             Mesh mesh;
             Material material;
 
             try
             {
-                mesh = chunkMeshFactory.CreateFromCnkLOD(chunkData);
+                mesh = await chunkMeshFactory.CreateFromCnkLOD(chunkData);
                 material = materialFactory.GetMaterial(chunkData);
             }
             catch (Exception e)
             {
                 Debug.LogErrorFormat("An error occurred while creating chunk \"{0}\". See below for details.", assetRef.Name);
                 Debug.LogException(e);
+                assetManager.Dispose(chunkData);
                 return null;
             }
 
+            assetManager.Dispose(chunkData);
             Assert.IsNotNull(mesh);
             Assert.IsNotNull(material);
 

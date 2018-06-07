@@ -1,57 +1,77 @@
 ﻿namespace WorldBuilder.Terrain
 {
     using System;
-    using System.Collections.Generic;
+    using System.Threading.Tasks;
     using Formats.Cnk;
     using UnityEngine;
 
     public class ChunkMeshFactory
     {
-        public Mesh CreateFromCnkLOD(CnkLOD cnkData)
+        public async Task<Mesh> CreateFromCnkLOD(CnkLOD cnkData)
         {
-            Mesh mesh = new Mesh();
-            mesh.name = cnkData.Name;
-            mesh.subMeshCount = 4;
+            await new WaitForBackgroundThread();
+            uint vertCount = 0;
 
-            List<Vector3> verts = new List<Vector3>();
-            List<Vector2> uvs = new List<Vector2>();
-
-            // Verts and UVs
             for (int i = 0; i < 4; i++)
             {
                 CnkLOD.RenderBatch renderBatch = cnkData.RenderBatches[i];
-                CalculateVertsAndUVs(cnkData, renderBatch, i, verts, uvs);
+                vertCount += renderBatch.VertexCount;
             }
 
-            // Apply verts to mesh
-            mesh.SetVertices(verts);
+            Vector3[] verts = new Vector3[vertCount];
+            Vector2[] uvs = new Vector2[vertCount];
+
+            // Verts and UVs
+            uint offset = 0;
+            for (int i = 0; i < 4; i++)
+            {
+                CnkLOD.RenderBatch renderBatch = cnkData.RenderBatches[i];
+                CalculateVertsAndUVs(offset, cnkData, renderBatch, i, verts, uvs);
+                offset += renderBatch.VertexCount;
+            }
+
+            int[][] triangles = new int[4][];
 
             // Triangles
             for (int i = 0; i < 4; i++)
             {
                 CnkLOD.RenderBatch renderBatch = cnkData.RenderBatches[i];
-                int[] indices = GetRenderBatchTriangles(cnkData, renderBatch);
-                mesh.SetTriangles(indices, i);
+                triangles[i] = GetRenderBatchTriangles(cnkData, renderBatch);
             }
 
-            mesh.SetUVs(0, uvs);
+            await new WaitForUpdate();
+
+            // Create mesh, and apply the generated data.
+            Mesh mesh = new Mesh();
+            mesh.name = cnkData.Name;
+            mesh.subMeshCount = 4;
+
+            // Apply verts to mesh
+            mesh.vertices = verts;
+            mesh.uv = uvs;
+
+            for (int i = 0; i < triangles.Length; i++)
+            {
+                mesh.SetTriangles(triangles[i], i);
+            }
+
             mesh.RecalculateNormals();
             mesh.UploadMeshData(true);
 
             return mesh;
         }
 
-        private void CalculateVertsAndUVs(CnkLOD cnkData, CnkLOD.RenderBatch renderBatch, int index, List<Vector3> verts, List<Vector2> uvs)
+        private void CalculateVertsAndUVs(uint offset, CnkLOD cnkData, CnkLOD.RenderBatch renderBatch, int index, Vector3[] verts, Vector2[] uvs)
         {
-            for (uint i = 0; i < renderBatch.VertexCount; i++)
+            for (int i = 0; i < renderBatch.VertexCount; i++)
             {
                 int k = (int) (renderBatch.VertexOffset + i);
                 double x = cnkData.Vertices[k].X + (index >> 1) * 64;
                 double y = cnkData.Vertices[k].Y + (index % 2) * 64;
                 double heightNear = (double) cnkData.Vertices[k].HeightNear / 64;
 
-                verts.Add(new Vector3((float)x, (float)heightNear, (float)y));
-                uvs.Add(new Vector2((float)y / 128, 1 - (float)x / 128));
+                verts[offset + i] = new Vector3((float)x, (float)heightNear, (float)y);
+                uvs[offset + i] = new Vector2((float)y / 128, 1 - (float)x / 128);
             }
         }
 

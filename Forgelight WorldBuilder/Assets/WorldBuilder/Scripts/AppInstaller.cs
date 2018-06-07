@@ -4,6 +4,7 @@
     using Objects;
     using Terrain;
     using UnityEngine;
+    using Utils.Pools;
     using WorldEditor;
     using Zenject;
     using Zone;
@@ -18,12 +19,15 @@
         public override void InstallBindings()
         {
             Container.BindInterfacesAndSelfTo<EditorManager>().FromNew().AsSingle().NonLazy();
+            Container.Bind<StatusReporter>().FromComponentInHierarchy().AsSingle().NonLazy();
 
             Container.Bind<GameManager>().FromNew().AsSingle().NonLazy();
             Container.Bind<AssetManager>().FromNew().AsSingle().NonLazy();
+            Container.Bind<ObjectPooler>().FromNew().AsSingle().NonLazy();
 
             Container.BindInterfacesAndSelfTo<MaterialDefinitionManager>().FromNew().AsSingle().NonLazy();
             Container.BindInterfacesAndSelfTo<ActorDefinitionManager>().FromNew().AsSingle().NonLazy();
+            Container.Bind<TextureManager>().FromNew().AsSingle().NonLazy();
 
             Container.Bind<ZoneFactory>().FromNew().AsSingle().NonLazy();
 

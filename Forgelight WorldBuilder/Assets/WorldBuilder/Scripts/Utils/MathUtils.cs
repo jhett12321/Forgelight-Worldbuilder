@@ -61,7 +61,7 @@
             }
             else
             {
-                rotX = -rot.y;
+                rotX = rot.y;
                 rotY = rot.x;
                 rot.z = -rot.z;
             }

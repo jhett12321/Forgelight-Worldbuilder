@@ -44,13 +44,16 @@
             zoneObjects = new GameObject(zoneName + " Objects");
             zoneTerrain = new GameObject(zoneName + " Terrain");
 
-            LoadZoneObjects(zone);
-            LoadZoneTerrain(zone);
+            Task zoneObjTask = LoadZoneObjects(zone);
+            Task zoneTerrainTask = LoadZoneTerrain(zone);
+
+            await zoneObjTask;
+            await zoneTerrainTask;
 
             assetManager.Dispose(zone);
         }
 
-        private async void LoadZoneObjects(Zone zone)
+        private async Task LoadZoneObjects(Zone zone)
         {
             float lastFrameTime = Time.realtimeSinceStartup;
 
@@ -91,7 +94,7 @@
             actor.LODMultiplier = data.LODMultiplier;
         }
 
-        private async void LoadZoneTerrain(Zone zone)
+        private async Task LoadZoneTerrain(Zone zone)
         {
             AssetRef[] assets = assetManager.GetAssetsByType(AssetType.CNK1, Path.GetFileNameWithoutExtension(zone.Name));
 

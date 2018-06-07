@@ -74,10 +74,9 @@
 
         public bool Deserialize(BinaryStream stream)
         {
-            stream.ByteConverter = ByteConverter.Little;
-
             // Header
-            Assert.AreEqual(MAGIC, stream.ReadString(4), "Model File header does not match magic value!");
+            string magic = stream.ReadString(4);
+            Assert.AreEqual(MAGIC, magic, "Model File header does not match magic value!");
 
             Version = stream.ReadUInt32();
 

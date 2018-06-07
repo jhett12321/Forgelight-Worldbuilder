@@ -45,7 +45,8 @@
         public bool Deserialize(BinaryStream stream)
         {
             // Header
-            Assert.AreEqual(MAGIC, stream.ReadString(4), "Zone file does not have the correct header!");
+            string magic = stream.ReadString(4);
+            Assert.AreEqual(MAGIC, magic, "Zone file does not have the correct header!");
 
             Version = stream.ReadUInt32();
 

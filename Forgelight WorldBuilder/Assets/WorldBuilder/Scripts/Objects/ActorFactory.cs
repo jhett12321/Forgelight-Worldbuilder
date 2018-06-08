@@ -5,6 +5,7 @@
     using Formats.Adr;
     using Formats.Dme;
     using Materials;
+    using Meshes;
     using UnityEngine;
     using UnityEngine.Assertions;
     using Zenject;
@@ -99,6 +100,7 @@
         private async Task<ForgelightActor> LoadNewActor(Adr actorDefinition)
         {
             await new WaitForBackgroundThread();
+
             ForgelightActor actor;
 
             // Attempt to find the model's Dme.
@@ -111,10 +113,14 @@
             else
             {
                 // Deserialization
+                MeshData meshData = actorMeshFactory.GenerateMeshData(modelDef);
+
                 await new WaitForUpdate();
 
-                UnityEngine.Mesh mesh = await actorMeshFactory.CreateMeshFromDme(modelDef);
+                UnityEngine.Mesh mesh = actorMeshFactory.CreateMeshFromData(modelDef.Name, meshData);
                 Material[] materials = materialFactory.GetActorMaterials(modelDef);
+
+                assetManager.Dispose(modelDef);
 
                 Assert.IsNotNull(mesh);
                 Assert.IsNotNull(materials);
@@ -129,8 +135,6 @@
                 meshFilter.sharedMesh = mesh;
                 meshRenderer.sharedMaterials = materials;
             }
-
-            assetManager.Dispose(modelDef);
 
             // TODO LOD Groups
             actor.name = actorDefinition.DisplayName;

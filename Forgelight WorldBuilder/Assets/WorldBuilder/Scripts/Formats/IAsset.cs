@@ -2,7 +2,6 @@
 {
     using System.IO;
     using Syroot.BinaryData;
-    using Utils.Pools;
 
     public interface IAsset
     {
@@ -21,7 +20,7 @@
 
     public interface IReadableAsset : IAsset
     {
-        bool Deserialize(BinaryStream stream);
+        bool Deserialize(BinaryStream stream, AssetManager assetManager);
     }
 
     public interface IWritableAsset : IAsset

@@ -6,6 +6,7 @@
     using Formats.Cnk;
     using Formats.Pack;
     using Materials;
+    using Meshes;
     using UnityEngine;
     using UnityEngine.Assertions;
     using Zenject;
@@ -28,13 +29,14 @@
             Assert.IsNotNull(chunkData);
 
             // Deserialization
-            await new WaitForUpdate();
             Mesh mesh;
             Material material;
 
             try
             {
-                mesh = await chunkMeshFactory.CreateFromCnkLOD(chunkData);
+                MeshData meshData = chunkMeshFactory.GenerateMeshData(chunkData);
+                await new WaitForUpdate();
+                mesh = chunkMeshFactory.CreateMeshFromData(chunkData.Name, meshData);
                 material = materialFactory.GetMaterial(chunkData);
             }
             catch (Exception e)

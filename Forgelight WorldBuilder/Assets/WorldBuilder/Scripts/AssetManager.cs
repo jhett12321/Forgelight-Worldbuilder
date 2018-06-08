@@ -105,7 +105,7 @@
 
                 using (BinaryStream binaryStream = new BinaryStream(stream, retVal.ByteConverter))
                 {
-                    result = retVal.Deserialize(binaryStream);
+                    result = retVal.Deserialize(binaryStream, this);
                 }
             }
             catch (Exception e)

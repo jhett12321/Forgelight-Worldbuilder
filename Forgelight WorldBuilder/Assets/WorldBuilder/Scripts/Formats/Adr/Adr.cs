@@ -10,7 +10,7 @@
     /// <summary>
     /// Represents the Actor Definitions XML File.
     /// </summary>
-    public class Adr : IReadableAsset, IPoolResetable
+    public class Adr : IReadableAsset, IPoolDisposable
     {
         public ByteConverter ByteConverter => ByteConverter.Little;
         public string Name { get; set; }
@@ -23,7 +23,7 @@
 
         public bool IsPlaceable { get; private set; }
 
-        public bool Deserialize(BinaryStream stream)
+        public bool Deserialize(BinaryStream stream, AssetManager assetManager)
         {
             XmlReaderSettings settings = new XmlReaderSettings
             {
@@ -99,7 +99,7 @@
             return true;
         }
 
-        public void Reset()
+        public void Dispose(AssetManager assetManager)
         {
             Lods.Clear();
         }

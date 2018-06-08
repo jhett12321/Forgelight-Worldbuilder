@@ -112,7 +112,7 @@
         }
         #endregion
 
-        public bool Deserialize(BinaryStream stream)
+        public bool Deserialize(BinaryStream stream, AssetManager assetManager)
         {
             Cnk0 chunk = new Cnk0();
 

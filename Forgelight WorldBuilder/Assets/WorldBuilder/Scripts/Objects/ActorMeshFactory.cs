@@ -6,6 +6,7 @@
     using Formats.Dma;
     using Formats.Dme;
     using Materials;
+    using Meshes;
     using UnityEngine;
     using UnityEngine.Rendering;
     using Zenject;
@@ -21,59 +22,57 @@
         // TODO MAGIC 0 DrawStyle index value.
         private const int DRAWSTYLE_INDEX = 0;
 
-        /// <summary>
-        /// Creates a Unity-Compatible Mesh from a forgelight DME file.
-        /// </summary>
-        /// <param name="modelData">The source model.</param>
-        /// <returns></returns>
-        public async Task<UnityEngine.Mesh> CreateMeshFromDme(Dme modelData)
+        public MeshData GenerateMeshData(Dme modelData)
         {
-            await new WaitForBackgroundThread();
+            MeshData meshData = new MeshData();
+
             uint totalVerts = 0;
 
             // Verts and UVs
-            foreach (Mesh meshData in modelData.Meshes)
+            foreach (Mesh mesh in modelData.Meshes)
             {
-                totalVerts += meshData.VertexCount;
+                totalVerts += mesh.VertexCount;
             }
 
-            Vector3[] verts = new Vector3[totalVerts];
-            Vector2[] uvs = new Vector2[totalVerts];
+            meshData.verts = new Vector3[totalVerts];
+            meshData.uvs = new Vector2[totalVerts];
 
             int offset = 0;
-            foreach (Mesh meshData in modelData.Meshes)
+            foreach (Mesh mesh in modelData.Meshes)
             {
-                ProcessMesh(offset, modelData, meshData, verts, uvs);
-                offset += (int)meshData.VertexCount;
+                ProcessMesh(offset, modelData, mesh, meshData.verts, meshData.uvs);
+                offset += (int)mesh.VertexCount;
             }
 
             // Triangles
-            int[][] triangles = new int[modelData.Meshes.Count][];
+            meshData.triangles = new int[modelData.Meshes.Count][];
             uint vertCount = 0;
             for (int i = 0; i < modelData.Meshes.Count; i++)
             {
-                Mesh meshData = modelData.Meshes[i];
+                Mesh mesh = modelData.Meshes[i];
 
+                meshData.triangles[i] = GetMeshTriangles(mesh, vertCount);
 
-                triangles[i] = GetMeshTriangles(meshData, vertCount);
-
-                vertCount += meshData.VertexCount;
+                vertCount += mesh.VertexCount;
             }
 
-            // Apply the loaded data to the mesh.
-            await new WaitForUpdate();
+            meshData.IndexFormat = GetIndexFormat(modelData.Meshes[0]);
 
+            return meshData;
+        }
+
+        public UnityEngine.Mesh CreateMeshFromData(string name, MeshData meshData)
+        {
             UnityEngine.Mesh mesh = new UnityEngine.Mesh();
-            mesh.name = modelData.Name;
-            mesh.subMeshCount = modelData.Meshes.Count;
+            mesh.name = name;
+            mesh.subMeshCount = meshData.triangles.Length;
 
-            mesh.vertices = verts;
-            mesh.uv = uvs;
+            mesh.vertices = meshData.verts;
+            mesh.uv = meshData.uvs;
 
-            mesh.indexFormat = GetIndexFormat(modelData.Meshes[0]);
-            for (int i = 0; i < triangles.Length; i++)
+            for (int i = 0; i < meshData.triangles.Length; i++)
             {
-                mesh.SetTriangles(triangles[i], i);
+                mesh.SetTriangles(meshData.triangles[i], i);
             }
 
             mesh.RecalculateNormals();

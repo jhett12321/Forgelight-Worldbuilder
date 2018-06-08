@@ -3,9 +3,9 @@
     using System.Collections.Concurrent;
     using System.Threading;
 
-    public interface IPoolResetable
+    public interface IPoolDisposable
     {
-        void Reset();
+        void Dispose(AssetManager assetManager);
     }
 
     public abstract class ObjectPool
@@ -88,11 +88,8 @@
         /// Returns an existing active instance back to the pool.
         /// </summary>
         /// <param name="instance"></param>
-        public void Dispose(T instance)
+        public void ReturnToPool(T instance)
         {
-            IPoolResetable resetable = instance as IPoolResetable;
-            resetable?.Reset();
-
             PooledItems.Push(instance);
             Interlocked.Decrement(ref ActiveInstances);
         }

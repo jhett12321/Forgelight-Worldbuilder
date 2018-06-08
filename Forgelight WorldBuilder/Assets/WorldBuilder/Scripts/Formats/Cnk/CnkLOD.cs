@@ -4,14 +4,16 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using Dma;
     using LzhamWrapper;
     using Syroot.BinaryData;
     using UnityEngine;
     using UnityEngine.Assertions;
     using Utils;
     using Utils.Pools;
+    using Zenject;
 
-    public class CnkLOD : IReadableAsset, IPoolResetable
+    public class CnkLOD : IReadableAsset, IPoolDisposable
     {
         public ByteConverter ByteConverter => ByteConverter.Little;
         public string Name { get; set; }
@@ -35,8 +37,8 @@
         public Buffer<Texture> Textures = new Buffer<Texture>();
         public class Texture
         {
-            public readonly Buffer<byte> ColorNXMap = new Buffer<byte>();
-            public readonly Buffer<byte> SpecNyMap = new Buffer<byte>();
+            public DdsTexture ColorNXMap;
+            public DdsTexture SpecNyMap;
             public readonly Buffer<byte> ExtraData1 = new Buffer<byte>();
             public readonly Buffer<byte> ExtraData2 = new Buffer<byte>();
             public readonly Buffer<byte> ExtraData3 = new Buffer<byte>();
@@ -111,7 +113,7 @@
             TileOccluderInfos = new List<TileOccluderInfo>();
         }
 
-        public void Reset()
+        public void Dispose(AssetManager assetManager)
         {
             Indices.Clear();
             Vertices.Clear();
@@ -120,9 +122,15 @@
             UnknownShorts1.Clear();
             UnknownVectors1.Clear();
             TileOccluderInfos.Clear();
+
+            foreach (Texture texture in Textures)
+            {
+                assetManager.Dispose(texture.ColorNXMap);
+                assetManager.Dispose(texture.SpecNyMap);
+            }
         }
 
-        public bool Deserialize(BinaryStream stream)
+        public bool Deserialize(BinaryStream stream, AssetManager assetManager)
         {
             // Header
             string magic = stream.ReadString(3);
@@ -179,10 +187,10 @@
                     }
 
                     uint colorNxMapSize = decompressedStream.ReadUInt32();
-                    decompressedStream.ReadBytes(texture.ColorNXMap, (int)colorNxMapSize);
+                    texture.ColorNXMap = assetManager.CreateAsset<DdsTexture>(decompressedStream.ReadBytes((int)colorNxMapSize));
 
                     uint specNyMapSize = decompressedStream.ReadUInt32();
-                    decompressedStream.ReadBytes(texture.SpecNyMap, (int)specNyMapSize);
+                    texture.SpecNyMap = assetManager.CreateAsset<DdsTexture>(decompressedStream.ReadBytes((int)specNyMapSize));
 
                     uint extraData1Size = decompressedStream.ReadUInt32();
                     decompressedStream.ReadBytes(texture.ExtraData1, (int)extraData1Size);

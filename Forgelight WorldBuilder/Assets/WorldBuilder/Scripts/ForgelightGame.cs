@@ -1,6 +1,5 @@
 ﻿namespace WorldBuilder
 {
-    using System;
     using System.IO;
     using System.Threading.Tasks;
     using Formats.Pack;
@@ -52,7 +51,7 @@
                 Pack pack = new Pack(path);
                 binaryStream.ByteConverter = pack.ByteConverter;
 
-                pack.Deserialize(binaryStream);
+                pack.Deserialize(binaryStream, null);
 
                 return pack;
             }

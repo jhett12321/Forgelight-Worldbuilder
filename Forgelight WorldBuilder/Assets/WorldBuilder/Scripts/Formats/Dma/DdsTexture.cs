@@ -26,7 +26,7 @@
         public int Width;
         public Buffer<byte> TextureData = new Buffer<byte>();
 
-        public bool Deserialize(BinaryStream stream)
+        public bool Deserialize(BinaryStream stream, AssetManager assetManager)
         {
             // Header
             stream.Seek(4, SeekOrigin.Begin);

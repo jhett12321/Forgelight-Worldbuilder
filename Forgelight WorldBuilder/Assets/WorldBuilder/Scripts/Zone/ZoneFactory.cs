@@ -14,8 +14,6 @@
 
     public class ZoneFactory
     {
-        private const float MAX_FRAME_TIME = 0.06f;
-
         [Inject] private AssetManager assetManager;
         [Inject] private ActorFactory actorFactory;
         [Inject] private TerrainFactory terrainFactory;
@@ -55,31 +53,39 @@
 
         private async Task LoadZoneObjects(Zone zone)
         {
-            float lastFrameTime = Time.realtimeSinceStartup;
+            Task[] objTasks = new Task[zone.Objects.Count];
 
             for (int i = 0; i < zone.Objects.Count; i++)
             {
                 Object zoneObject = zone.Objects[i];
-                foreach (Object.Instance instance in zoneObject.Instances)
-                {
-                    ForgelightActor actor = await actorFactory.CreateActor(zoneObject.ActorDefinition);
+                objTasks[i] = CreateActorInstances(zoneObject);
 
-                    PrepareObject(actor, instance);
+                statusReporter.ReportProgress("Loading Zone Objects", i, zone.Objects.Count);
+                await new WaitForUpdate();
+            }
 
-                    if (Time.realtimeSinceStartup - lastFrameTime > MAX_FRAME_TIME)
-                    {
-                        lastFrameTime = Time.realtimeSinceStartup;
-
-                        statusReporter.ReportProgress("Loading Zone Objects", i, zone.Objects.Count);
-                        await new WaitForUpdate();
-                    }
-                }
+            foreach (Task objTask in objTasks)
+            {
+                await objTask;
             }
 
             zoneObjects.transform.localScale = new Vector3(-1, 1, 1);
         }
 
-        private void PrepareObject(ForgelightActor actor, Object.Instance data)
+        public async Task<ForgelightActor[]> CreateActorInstances(Object objectDef)
+        {
+            ForgelightActor[] actors = new ForgelightActor[objectDef.Instances.Count];
+
+            for (int i = 0; i < objectDef.Instances.Count; i++)
+            {
+                actors[i] = await actorFactory.CreateActor(objectDef.ActorDefinition);
+                PrepareInstance(actors[i], objectDef.Instances[i]);
+            }
+
+            return actors;
+        }
+
+        private void PrepareInstance(ForgelightActor actor, Object.Instance data)
         {
             actor.transform.SetParent(zoneObjects.transform);
 
@@ -104,11 +110,19 @@
                 return;
             }
 
-            float lastFrameTime = Time.realtimeSinceStartup;
+            Task<ForgelightChunk>[] chunkTasks = new Task<ForgelightChunk>[assets.Length];
             for (int i = 0; i < assets.Length; i++)
             {
                 AssetRef assetRef = assets[i];
-                ForgelightChunk chunk = await terrainFactory.CreateChunk(assetRef);
+                chunkTasks[i] = terrainFactory.CreateChunk(assetRef);
+                statusReporter.ReportProgress("Loading Terrain Chunks", i, assets.Length);
+
+                await new WaitForUpdate();
+            }
+
+            foreach (Task<ForgelightChunk> task in chunkTasks)
+            {
+                ForgelightChunk chunk = await task;
 
                 if (chunk == null)
                 {
@@ -116,13 +130,6 @@
                 }
 
                 chunk.transform.SetParent(zoneTerrain.transform);
-
-                if (Time.realtimeSinceStartup - lastFrameTime > MAX_FRAME_TIME)
-                {
-                    lastFrameTime = Time.realtimeSinceStartup;
-                    statusReporter.ReportProgress("Loading Terrain Chunks", i, assets.Length);
-                    await new WaitForUpdate();
-                }
             }
 
             zoneTerrain.transform.localScale = new Vector3(-2, 2, 2);

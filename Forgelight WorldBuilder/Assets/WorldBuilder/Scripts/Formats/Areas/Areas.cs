@@ -15,7 +15,7 @@
         public string Name { get; set; }
         public string DisplayName { get; set; }
 
-        public bool Deserialize(BinaryStream stream)
+        public bool Deserialize(BinaryStream stream, AssetManager assetManager)
         {
             XmlReaderSettings settings = new XmlReaderSettings
             {

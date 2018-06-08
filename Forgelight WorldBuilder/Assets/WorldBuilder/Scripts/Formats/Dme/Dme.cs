@@ -14,7 +14,7 @@
     /// <summary>
     /// Represents a Forgelight Model (DME) file.
     /// </summary>
-    public class Dme : IReadableAsset, IPoolResetable
+    public class Dme : IReadableAsset, IPoolDisposable
     {
         public ByteConverter ByteConverter => ByteConverter.Little;
 
@@ -63,7 +63,7 @@
             BoneMapEntries = new List<BoneMapEntry>();
         }
 
-        public void Reset()
+        public void Dispose(AssetManager assetManager)
         {
             TextureStrings.Clear();
             Materials.Clear();
@@ -72,7 +72,7 @@
             BoneMapEntries.Clear();
         }
 
-        public bool Deserialize(BinaryStream stream)
+        public bool Deserialize(BinaryStream stream, AssetManager assetManager)
         {
             // Header
             string magic = stream.ReadString(4);

@@ -42,7 +42,7 @@
 
         #endregion
 
-        public bool Deserialize(BinaryStream stream)
+        public bool Deserialize(BinaryStream stream, AssetManager assetManager)
         {
             // Header
             string magic = stream.ReadString(4);

@@ -5,12 +5,7 @@
 
     public class StatusReporter : MonoBehaviour
     {
-        private Text statusBarText;
-
-        public void Awake()
-        {
-            statusBarText = GetComponent<Text>();
-        }
+        public Text statusBarText;
 
         public async void ReportProgress(string taskName, int processed, int total)
         {
@@ -19,10 +14,15 @@
 
             if (progress == 100)
             {
-                statusBarText.text = "";
+                gameObject.SetActive(false);
             }
             else
             {
+                if (!gameObject.activeSelf)
+                {
+                    gameObject.SetActive(true);
+                }
+
                 statusBarText.text = $"({progress}% complete) {taskName} - {processed}/{total}";
             }
         }

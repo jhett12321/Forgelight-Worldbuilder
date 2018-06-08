@@ -18,8 +18,9 @@
 
         public override void InstallBindings()
         {
-            Container.BindInterfacesAndSelfTo<EditorManager>().FromNew().AsSingle().NonLazy();
-            Container.Bind<StatusReporter>().FromComponentInHierarchy().AsSingle().NonLazy();
+            Container.Bind<IEditorControl>().FromComponentInHierarchy().AsSingle().NonLazy();
+            Container.Bind<CameraManager>().FromComponentInHierarchy().AsSingle().NonLazy();
+            Container.Bind<StatusReporter>().FromComponentInHierarchy(null, true).AsSingle().NonLazy();
 
             Container.Bind<GameManager>().FromNew().AsSingle().NonLazy();
             Container.Bind<AssetManager>().FromNew().AsSingle().NonLazy();

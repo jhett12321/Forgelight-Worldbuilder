@@ -1,5 +1,6 @@
 ﻿namespace WorldBuilder.Objects
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Formats.Adr;
@@ -9,6 +10,7 @@
     using UnityEngine;
     using UnityEngine.Assertions;
     using Zenject;
+    using Object = UnityEngine.Object;
 
     /// <summary>
     /// Handles creation, and destruction of actor instances.
@@ -46,26 +48,28 @@
             actorPoolParent.SetActive(false);
         }
 
-        public async Task<ForgelightActor> CreateActor(string actorDefName)
-        {
-            Adr actorDefinition = actorDefinitionManager.GetDefinition(actorDefName);
-
-            if (actorDefinition != null)
-            {
-                return await CreateActor(actorDefinition);
-            }
-
-            Debug.LogWarning("Actor \"" + actorDefName + "\" does not exist!");
-            return null;
-        }
-
-        public async Task<ForgelightActor> CreateActor(Adr actorDefinition)
+        public async Task<ForgelightActor> CreateActor(string name)
         {
             ForgelightActor actorSource;
-            if (!cachedActors.TryGetValue(actorDefinition.Name, out actorSource))
+
+            if (!cachedActors.TryGetValue(name, out actorSource))
             {
-                actorSource = await LoadNewActor(actorDefinition);
-                cachedActors[actorDefinition.Name] = actorSource;
+                Adr actorDefinition = actorDefinitionManager.GetDefinition(name);
+
+                if (actorDefinition != null)
+                {
+                    actorSource = await LoadNewActor(actorDefinition);
+                }
+                else
+                {
+                    actorSource = CreateMissingPlaceholder(name);
+                }
+
+                actorSource.name = name;
+                actorSource.Init(actorDefinition);
+                actorSource.transform.SetParent(actorPoolParent.transform);
+
+                cachedActors[name] = actorSource;
             }
 
             ForgelightActor actorInstance = Object.Instantiate(actorSource);
@@ -108,12 +112,24 @@
 
             if (modelDef == null)
             {
-                actor = CreateMissingPlaceholder(actorDefinition);
+                actor = CreateMissingPlaceholder(actorDefinition.Name);
             }
             else
             {
                 // Deserialization
-                MeshData meshData = actorMeshFactory.GenerateMeshData(modelDef);
+                MeshData meshData;
+                try
+                {
+                    meshData = actorMeshFactory.GenerateMeshData(modelDef);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"Could not create mesh {modelDef.Name}. {e}");
+
+                    await new WaitForUpdate();
+
+                    return CreateMissingPlaceholder(actorDefinition.Name);
+                }
 
                 await new WaitForUpdate();
 
@@ -137,16 +153,12 @@
             }
 
             // TODO LOD Groups
-            actor.name = actorDefinition.DisplayName;
-            actor.Init(actorDefinition);
-            actor.transform.SetParent(actorPoolParent.transform);
-
             return actor;
         }
 
-        private ForgelightActor CreateMissingPlaceholder(Adr actorDefinition)
+        private ForgelightActor CreateMissingPlaceholder(string name)
         {
-            Debug.LogErrorFormat("Could not find mesh data for actor definition \"{0}\". Using placeholder asset.", actorDefinition.DisplayName);
+            Debug.LogErrorFormat("Could not find mesh data for actor definition \"{0}\". Using placeholder asset.", name);
             return Object.Instantiate(missingActorPrefab);
         }
     }

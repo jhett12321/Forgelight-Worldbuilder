@@ -171,11 +171,9 @@
             return Name;
         }
 
-        public bool GetEntryInfoFromDataUsageAndUsageIndex(Entry.DataUsages dataUsage, int usageIndex, out Entry.DataTypes dataType, out int stream, out int offset)
+        public bool GetEntryInfo(Entry.DataUsages dataUsage, int usageIndex, out EntryInfo info)
         {
-            dataType = Entry.DataTypes.None;
-            stream = 0;
-            offset = 0;
+            info = new EntryInfo();
 
             uint previousStream = 0;
 
@@ -183,25 +181,32 @@
             {
                 if (entry.Stream != previousStream)
                 {
-                    offset = 0;
+                    info.offset = 0;
                 }
 
-                stream = (int) entry.Stream;
+                info.streamIndex = (int) entry.Stream;
 
                 if (entry.DataUsage == dataUsage && entry.DataUsageIndex == usageIndex)
                 {
-                    dataType = entry.DataType;
+                    info.dataType = entry.DataType;
                     return true;
                 }
 
                 //increment offset
-                offset += Entry.GetDataTypeSize(entry.DataType);
+                info.offset += Entry.GetDataTypeSize(entry.DataType);
 
                 //set previous stream for next iteration
                 previousStream = entry.Stream;
             }
 
             return false;
+        }
+
+        public struct EntryInfo
+        {
+            public int streamIndex;
+            public Entry.DataTypes dataType;
+            public int offset;
         }
     }
 }

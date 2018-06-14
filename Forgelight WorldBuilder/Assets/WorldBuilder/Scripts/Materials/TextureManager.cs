@@ -32,6 +32,7 @@
                 }
 
                 texture = new Texture2D(textureData.Width, textureData.Height, textureData.TextureFormat, true);
+                texture.name = textureName;
                 texture.LoadRawTextureData(textureData.TextureData.Data);
                 texture.Apply(true, true);
 

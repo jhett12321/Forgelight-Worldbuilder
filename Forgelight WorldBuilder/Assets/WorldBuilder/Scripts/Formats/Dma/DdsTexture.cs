@@ -54,6 +54,9 @@
                 case "DXT1":
                     TextureFormat = TextureFormat.DXT1;
                     break;
+                case "DXT3":
+                    TextureFormat = TextureFormat.DXT5;
+                    break;
                 default:
                     Debug.LogWarning("Unknown Texture type: " + texFormat);
                     return false;

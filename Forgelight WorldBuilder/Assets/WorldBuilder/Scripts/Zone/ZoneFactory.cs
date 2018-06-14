@@ -69,6 +69,7 @@
                 await objTask;
             }
 
+            statusReporter.ReportProgress("Loading Zone Objects", zone.Objects.Count, zone.Objects.Count);
             zoneObjects.transform.localScale = new Vector3(-1, 1, 1);
         }
 
@@ -132,6 +133,7 @@
                 chunk.transform.SetParent(zoneTerrain.transform);
             }
 
+            statusReporter.ReportProgress("Loading Terrain Chunks", assets.Length, assets.Length);
             zoneTerrain.transform.localScale = new Vector3(-2, 2, 2);
         }
     }

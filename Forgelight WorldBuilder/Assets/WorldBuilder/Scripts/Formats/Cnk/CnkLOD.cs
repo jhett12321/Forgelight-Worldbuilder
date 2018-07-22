@@ -7,6 +7,7 @@
     using Dma;
     using LzhamWrapper;
     using Syroot.BinaryData;
+    using Textures;
     using UnityEngine;
     using UnityEngine.Assertions;
     using Utils;
@@ -37,8 +38,8 @@
         public Buffer<Texture> Textures = new Buffer<Texture>();
         public class Texture
         {
-            public DdsTexture ColorNXMap;
-            public DdsTexture SpecNyMap;
+            public Dds ColorNXMap;
+            public Dds SpecNyMap;
             public readonly Buffer<byte> ExtraData1 = new Buffer<byte>();
             public readonly Buffer<byte> ExtraData2 = new Buffer<byte>();
             public readonly Buffer<byte> ExtraData3 = new Buffer<byte>();
@@ -187,10 +188,10 @@
                     }
 
                     uint colorNxMapSize = decompressedStream.ReadUInt32();
-                    texture.ColorNXMap = assetManager.CreateAsset<DdsTexture>(decompressedStream.ReadBytes((int)colorNxMapSize));
+                    texture.ColorNXMap = assetManager.CreateAsset<Dds>(decompressedStream.ReadBytes((int)colorNxMapSize));
 
                     uint specNyMapSize = decompressedStream.ReadUInt32();
-                    texture.SpecNyMap = assetManager.CreateAsset<DdsTexture>(decompressedStream.ReadBytes((int)specNyMapSize));
+                    texture.SpecNyMap = assetManager.CreateAsset<Dds>(decompressedStream.ReadBytes((int)specNyMapSize));
 
                     uint extraData1Size = decompressedStream.ReadUInt32();
                     decompressedStream.ReadBytes(texture.ExtraData1, (int)extraData1Size);

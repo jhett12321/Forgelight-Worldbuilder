@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using Formats.Dma;
+    using Formats.Textures;
     using ModestTree;
     using UnityEngine;
     using Zenject;
@@ -22,7 +23,7 @@
             Texture2D texture;
             if (!Textures.TryGetValue(textureName, out texture))
             {
-                DdsTexture textureData = assetManager.LoadPackAsset<DdsTexture>(textureName);
+                Dds textureData = assetManager.LoadPackAsset<Dds>(textureName);
 
                 if (textureData == null)
                 {

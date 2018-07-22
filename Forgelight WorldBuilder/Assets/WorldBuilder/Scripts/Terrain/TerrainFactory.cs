@@ -19,7 +19,7 @@
         [Inject] private ChunkMeshFactory chunkMeshFactory;
         [Inject] private ChunkMaterialFactory materialFactory;
 
-        public async Task<ForgelightChunk> CreateChunk(AssetRef assetRef)
+        public async Task<ForgelightChunk> CreateChunk(AssetRef assetRef, Transform parent)
         {
             await new WaitForBackgroundThread();
             string chunkName = Path.GetFileNameWithoutExtension(assetRef.Name);
@@ -76,6 +76,7 @@
             int chunkPosX = (Convert.ToInt32(nameElements[2]) * CHUNK_POS_OFFSET);
             int chunkPosZ = (Convert.ToInt32(nameElements[1]) * CHUNK_POS_OFFSET);
 
+            chunk.transform.SetParent(parent);
             chunk.transform.position = new Vector3(chunkPosX, 0, chunkPosZ);
 
             return chunk;

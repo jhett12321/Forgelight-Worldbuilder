@@ -2,6 +2,7 @@
 {
     using Formats.Cnk;
     using Formats.Dma;
+    using Formats.Textures;
     using UnityEngine;
     using Zenject;
     using Material = UnityEngine.Material;
@@ -25,8 +26,8 @@
             {
                 CnkLOD.Texture texture = chunkData.Textures[i];
 
-                DdsTexture diffuse = texture.ColorNXMap;
-                DdsTexture spec = texture.SpecNyMap;
+                Dds diffuse = texture.ColorNXMap;
+                Dds spec = texture.SpecNyMap;
 
                 Texture2D diffuseTex = new Texture2D(diffuse.Width, diffuse.Height, diffuse.TextureFormat, false);
                 Texture2D specTex = new Texture2D(spec.Width, spec.Height, spec.TextureFormat, false);

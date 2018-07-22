@@ -2,7 +2,9 @@
 {
     using Materials;
     using Objects;
+    using Sky;
     using Terrain;
+    using UI;
     using UnityEngine;
     using Utils.Pools;
     using WorldEditor;
@@ -39,6 +41,16 @@
             Container.Bind<TerrainFactory>().FromNew().AsSingle().NonLazy();
             Container.Bind<ChunkMaterialFactory>().FromNew().AsSingle().WithArguments(TerrainSharedMaterial).NonLazy();
             Container.Bind<ChunkMeshFactory>().FromNew().AsSingle().NonLazy();
+
+            Container.Bind<SkyFactory>().FromNew().AsSingle().NonLazy();
+
+            InstallUI();
+        }
+
+        private void InstallUI()
+        {
+            Container.BindInterfacesAndSelfTo<ResolutionObserver>().FromNew().AsSingle().NonLazy();
+            Container.BindInterfacesAndSelfTo<MainEditor>().FromNew().AsSingle().NonLazy();
         }
     }
 }

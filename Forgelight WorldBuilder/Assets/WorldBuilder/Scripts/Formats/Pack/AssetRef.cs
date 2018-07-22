@@ -60,6 +60,6 @@
             return assetRef;
         }
 
-        public override string ToString() => Name;
+        public override string ToString() => DisplayName;
     }
 }

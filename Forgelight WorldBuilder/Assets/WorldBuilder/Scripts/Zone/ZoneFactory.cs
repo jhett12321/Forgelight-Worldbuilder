@@ -5,6 +5,7 @@
     using Formats.Pack;
     using Formats.Zone;
     using Objects;
+    using Sky;
     using Terrain;
     using UnityEngine;
     using Utils;
@@ -12,19 +13,29 @@
     using Zenject;
     using Object = Formats.Zone.Object;
 
+    /// <summary>
+    /// Directs individual factories and systems to replicate zone data (Actors, Terrain).
+    /// </summary>
     public class ZoneFactory
     {
         [Inject] private AssetManager assetManager;
         [Inject] private ActorFactory actorFactory;
         [Inject] private TerrainFactory terrainFactory;
         [Inject] private StatusReporter statusReporter;
+        [Inject] private SkyFactory skyFactory;
 
         private GameObject zoneObjects;
         private GameObject zoneTerrain;
 
-        public async void LoadZoneFromPacks(string zoneName)
+        public string LoadedZoneName { get; private set; }
+        public bool ZoneLoaded { get; private set; }
+
+        public void LoadZoneFromPacks(AssetRef zone) => LoadZone(assetManager.CreateAsset<Zone>(zone));
+        public void LoadZoneFromFile(string filePath) => LoadZone(assetManager.LoadExternalAsset<Zone>(filePath));
+
+        public async void LoadZone(Zone zone)
         {
-            Zone zone = assetManager.LoadPackAsset<Zone>(zoneName);
+            ZoneLoaded = false;
             if (zone == null)
             {
                 return;
@@ -39,8 +50,12 @@
                 GameObject.Destroy(zoneTerrain);
             }
 
-            zoneObjects = new GameObject(zoneName + " Objects");
-            zoneTerrain = new GameObject(zoneName + " Terrain");
+            zoneObjects = new GameObject(zone.Name + " Objects");
+            zoneTerrain = new GameObject(zone.Name + " Terrain");
+
+            // Hide until everything has loaded.
+            zoneTerrain.SetActive(false);
+            zoneObjects.SetActive(false);
 
             Task zoneObjTask = LoadZoneObjects(zone);
             Task zoneTerrainTask = LoadZoneTerrain(zone);
@@ -48,7 +63,16 @@
             await zoneObjTask;
             await zoneTerrainTask;
 
+            LoadZoneSky(zone);
+
+            // Show the objects now after loading
+            zoneObjects.SetActive(true);
+            zoneTerrain.SetActive(true);
+
+            LoadedZoneName = zone.Name;
             assetManager.Dispose(zone);
+
+            ZoneLoaded = true;
         }
 
         private async Task LoadZoneObjects(Zone zone)
@@ -79,7 +103,7 @@
 
             for (int i = 0; i < objectDef.Instances.Count; i++)
             {
-                actors[i] = await actorFactory.CreateActor(objectDef.ActorDefinition);
+                actors[i] = await actorFactory.CreateActor(objectDef.ActorDefinition, zoneObjects.transform);
                 PrepareInstance(actors[i], objectDef.Instances[i]);
             }
 
@@ -92,8 +116,7 @@
 
             TransformData convertedTransform = MathUtils.ConvertTransform(data.Position, data.Rotation, data.Scale, true, TransformMode.Standard);
 
-            actor.transform.position = convertedTransform.Position;
-            actor.transform.rotation = Quaternion.Euler(convertedTransform.Rotation);
+            actor.transform.SetPositionAndRotation(convertedTransform.Position, Quaternion.Euler(convertedTransform.Rotation));
             actor.transform.localScale = convertedTransform.Scale;
 
             actor.ID = data.ID;
@@ -115,7 +138,7 @@
             for (int i = 0; i < assets.Length; i++)
             {
                 AssetRef assetRef = assets[i];
-                chunkTasks[i] = terrainFactory.CreateChunk(assetRef);
+                chunkTasks[i] = terrainFactory.CreateChunk(assetRef, zoneTerrain.transform);
                 statusReporter.ReportProgress("Loading Terrain Chunks", i, assets.Length);
 
                 await new WaitForUpdate();
@@ -123,18 +146,16 @@
 
             foreach (Task<ForgelightChunk> task in chunkTasks)
             {
-                ForgelightChunk chunk = await task;
-
-                if (chunk == null)
-                {
-                    continue;
-                }
-
-                chunk.transform.SetParent(zoneTerrain.transform);
+                await task;
             }
 
             statusReporter.ReportProgress("Loading Terrain Chunks", assets.Length, assets.Length);
             zoneTerrain.transform.localScale = new Vector3(-2, 2, 2);
+        }
+
+        private void LoadZoneSky(Zone zone)
+        {
+            skyFactory.UpdateSky(Path.GetFileNameWithoutExtension(zone.Name));
         }
     }
 }

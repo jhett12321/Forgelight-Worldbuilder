@@ -1,0 +1,103 @@
+﻿namespace UWinForms.System.Windows.Forms
+{
+    using global::System;
+
+    public class KeyEventArgs : EventArgs
+    {
+        private static object[] keyValuesRaw;
+
+        private readonly Keys keyData;
+        private Keys keyCode;
+        private bool keyCodeCached;
+        private bool handled;
+        private bool suppressKeyPress;
+
+        public KeyEventArgs(Keys keyData)
+        {
+            this.keyData = keyData;
+        }
+        internal KeyEventArgs()
+        {
+
+        }
+
+        public virtual bool Alt
+        {
+            get { return (keyData & Keys.Alt) == Keys.Alt; }
+        }
+        public bool Control
+        {
+            get { return (keyData & Keys.Control) == Keys.Control; }
+        }
+        public bool Handled
+        {
+            get { return handled; }
+            set { handled = value; }
+        }
+        public Keys KeyCode
+        {
+            get
+            {
+                if (keyCodeCached == false)
+                {
+                    var keys = keyData & Keys.KeyCode;
+                    keyCode = !IsKeyDefined(keys) ? Keys.None : keys;
+                    keyCodeCached = true;
+                }
+
+                return keyCode;
+            }
+        }
+        public int KeyValue
+        {
+            get { return (int)(keyData & Keys.KeyCode); }
+        }
+        public Keys KeyData
+        {
+            get { return keyData; }
+        }
+        public Keys Modifiers
+        {
+            get { return keyData & Keys.Modifiers; }
+        }
+        public virtual bool Shift
+        {
+            get { return (keyData & Keys.Shift) == Keys.Shift; }
+        }
+        public bool SuppressKeyPress
+        {
+            get { return suppressKeyPress; }
+            set
+            {
+                suppressKeyPress = value;
+                handled = value;
+            }
+        }
+
+        public UnityEngine.KeyCode uwfKeyCode { get; set; }
+        public UnityEngine.EventModifiers uwfModifiers { get; set; }
+
+        // Less allocation, will only work with integer types, like typeof(Keys).
+        internal static bool IsKeyDefined(Keys value)
+        {
+            if (keyValuesRaw == null)
+            {
+                var fields = typeof(Keys).GetFields(
+                    global::System.Reflection.BindingFlags.Public |
+                    global::System.Reflection.BindingFlags.NonPublic |
+                    global::System.Reflection.BindingFlags.Static);
+
+                keyValuesRaw = new object[fields.Length];
+                for (int i = 0; i < fields.Length; i++)
+                    keyValuesRaw[i] = fields[i].GetRawConstantValue();
+            }
+
+            var keyValuesRawLength = keyValuesRaw.Length;
+            for (int i = 0; i < keyValuesRawLength; i++)
+                if ((Keys)keyValuesRaw[i] == value)
+                    return true;
+            
+            return false;
+        }
+    }
+}

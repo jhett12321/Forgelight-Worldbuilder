@@ -48,7 +48,7 @@
             actorPoolParent.SetActive(false);
         }
 
-        public async Task<ForgelightActor> CreateActor(string name)
+        public async Task<ForgelightActor> CreateActor(string name, Transform parent)
         {
             ForgelightActor actorSource;
 
@@ -72,7 +72,7 @@
                 cachedActors[name] = actorSource;
             }
 
-            ForgelightActor actorInstance = Object.Instantiate(actorSource);
+            ForgelightActor actorInstance = Object.Instantiate(actorSource, parent);
 
             return actorInstance;
         }

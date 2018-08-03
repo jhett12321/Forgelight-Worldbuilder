@@ -1,6 +1,6 @@
 ﻿namespace WorldBuilder.Objects
 {
-    using Formats.Adr;
+    using Formats.Xml.Adr;
     using UnityEngine;
 
     /// <summary>

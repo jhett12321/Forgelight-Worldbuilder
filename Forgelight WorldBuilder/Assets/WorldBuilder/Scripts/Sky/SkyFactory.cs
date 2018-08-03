@@ -1,6 +1,7 @@
 ﻿namespace WorldBuilder.Sky
 {
     using Formats.Textures;
+    using Formats.Xml.Sky;
     using UnityEngine;
     using Zenject;
 
@@ -11,6 +12,7 @@
     {
         [Inject] private AssetManager assetManager;
         // TODO Consider Time-of-day options.
+        // TODO Process Sky.xml
 
         private Material skyboxInstance;
 

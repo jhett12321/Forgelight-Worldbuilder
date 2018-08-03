@@ -1,0 +1,100 @@
+﻿namespace WorldBuilder.Utils
+{
+    using UnityEngine;
+
+    public static class LODGroupExtensions
+    {
+        public static void SetEnabled(this LODGroup lodGroup, bool enabled)
+        {
+            if (lodGroup.enabled != enabled)
+            {
+                lodGroup.enabled = enabled;
+                lodGroup.SetRenderersEnabled(enabled);
+            }
+        }
+
+        public static void SetRenderersEnabled(this LODGroup lodGroup, bool enabled)
+        {
+            var lods = lodGroup.GetLODs();
+            SetRenderersEnabled(lods, enabled);
+        }
+
+        public static void SetRenderersEnabled(LOD[] lods, bool enabled)
+        {
+            for (var i = 0; i < lods.Length; i++)
+            {
+                var lod = lods[i];
+
+                var renderers = lod.renderers;
+                foreach (var r in renderers)
+                {
+                    if (r)
+                        r.enabled = enabled;
+                }
+            }
+        }
+
+        public static int GetMaxLOD(this LODGroup lodGroup)
+        {
+            return lodGroup.lodCount - 1;
+        }
+
+        public static int GetCurrentLOD(this LODGroup lodGroup, Camera camera = null)
+        {
+            var lods = lodGroup.GetLODs();
+            var relativeHeight = lodGroup.GetRelativeHeight(camera ?? Camera.current);
+
+            var lodIndex = GetCurrentLOD(lods, lodGroup.GetMaxLOD(), relativeHeight, camera);
+
+            return lodIndex;
+        }
+
+        public static float GetWorldSpaceSize(this LODGroup lodGroup)
+        {
+            return GetWorldSpaceScale(lodGroup.transform) * lodGroup.size;
+        }
+
+        public static int GetCurrentLOD(LOD[] lods, int maxLOD, float relativeHeight, Camera camera = null)
+        {
+            var lodIndex = maxLOD;
+
+            for (var i = 0; i < lods.Length; i++)
+            {
+                var lod = lods[i];
+
+                if (relativeHeight >= lod.screenRelativeTransitionHeight)
+                {
+                    lodIndex = i;
+                    break;
+                }
+            }
+
+            return lodIndex;
+        }
+
+        public static float GetWorldSpaceScale(Transform t)
+        {
+            var scale = t.lossyScale;
+            float largestAxis = Mathf.Abs(scale.x);
+            largestAxis = Mathf.Max(largestAxis, Mathf.Abs(scale.y));
+            largestAxis = Mathf.Max(largestAxis, Mathf.Abs(scale.z));
+            return largestAxis;
+        }
+
+        public static float DistanceToRelativeHeight(Camera camera, float distance, float size)
+        {
+            if (camera.orthographic)
+                return size * 0.5F / camera.orthographicSize;
+
+            var halfAngle = Mathf.Tan(Mathf.Deg2Rad * camera.fieldOfView * 0.5F);
+            var relativeHeight = size * 0.5F / (distance * halfAngle);
+            return relativeHeight;
+        }
+
+        public static float GetRelativeHeight(this LODGroup lodGroup, Camera camera)
+        {
+            var distance = (lodGroup.transform.TransformPoint(lodGroup.localReferencePoint) - camera.transform.position).magnitude;
+            return DistanceToRelativeHeight(camera, distance, lodGroup.GetWorldSpaceSize());
+        }
+    }
+}

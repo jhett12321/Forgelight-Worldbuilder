@@ -1,52 +1,27 @@
-﻿namespace WorldBuilder.Formats.Areas
+﻿namespace WorldBuilder.Formats.Xml.Areas
 {
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Xml;
     using System.Xml.Linq;
-    using Syroot.BinaryData;
     using UnityEngine;
+    using Xml;
 
-    public class Areas : IReadableAsset
+    public class Areas : XmlAsset
     {
         public List<AreaDefinition> AreaDefinitions = new List<AreaDefinition>();
 
-        public ByteConverter ByteConverter => ByteConverter.Little;
-        public string Name { get; set; }
-        public string DisplayName { get; set; }
-
-        public bool Deserialize(BinaryStream stream, AssetManager assetManager)
+        public override bool HandleXMLData(List<XElement> elements)
         {
-            XmlReaderSettings settings = new XmlReaderSettings
-            {
-                ConformanceLevel = ConformanceLevel.Fragment
-            };
-
-            XDocument definitionsXML = new XDocument(new XElement("root"));
-            XElement root = definitionsXML.Descendants().First();
-
-            using (XmlReader xr = XmlReader.Create(stream, settings))
-            {
-                while (xr.Read())
-                {
-                    if (xr.NodeType == XmlNodeType.Element)
-                    {
-                        root.Add(XElement.Load(xr.ReadSubtree()));
-                    }
-                }
-            }
-
-            foreach (XElement areaDefTag in root.Elements())
+            foreach (XElement areaDefTag in elements)
             {
                 AreaDefinition areaDefinition = new AreaDefinition();
 
-                //Common
+                // Common
                 areaDefinition.ID = areaDefTag.Attribute("id").Value;
                 areaDefinition.Name = areaDefTag.Attribute("name").Value;
                 areaDefinition.Shape = areaDefTag.Attribute("shape").Value;
                 areaDefinition.Pos1 = new Vector3(float.Parse(areaDefTag.Attribute("x1").Value), float.Parse(areaDefTag.Attribute("y1").Value), float.Parse(areaDefTag.Attribute("z1").Value));
 
-                //Shapes
+                // Shapes
                 switch (areaDefinition.Shape)
                 {
                     case "sphere":
@@ -65,7 +40,7 @@
                 {
                     areaDefinition.Properties = new List<Property>();
 
-                    //Properties
+                    // Properties
                     foreach (XElement childProperty in areaDefTag.Elements())
                     {
                         Property property = new Property();

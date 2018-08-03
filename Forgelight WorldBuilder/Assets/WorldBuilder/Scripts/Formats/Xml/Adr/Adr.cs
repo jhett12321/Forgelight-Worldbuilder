@@ -1,21 +1,18 @@
-﻿namespace WorldBuilder.Formats.Adr
+﻿namespace WorldBuilder.Formats.Xml.Adr
 {
+    using System;
     using System.Collections.Generic;
-    using System.Xml;
+    using System.Linq;
     using System.Xml.Linq;
-    using Syroot.BinaryData;
     using UnityEngine;
     using Utils.Pools;
+    using Xml;
 
     /// <summary>
     /// Represents the Actor Definitions XML File.
     /// </summary>
-    public class Adr : IReadableAsset, IPoolDisposable
+    public class Adr : XmlAsset, IPoolDisposable
     {
-        public ByteConverter ByteConverter => ByteConverter.Little;
-        public string Name { get; set; }
-        public string DisplayName { get; set; }
-
         public string Base { get; private set; }
         public string MaterialType { get; private set; }
 
@@ -23,23 +20,13 @@
 
         public bool IsPlaceable { get; private set; }
 
-        public bool Deserialize(BinaryStream stream, AssetManager assetManager)
+        public override bool HandleXMLData(List<XElement> elements)
         {
-            XmlReaderSettings settings = new XmlReaderSettings
+            // ADR's only have 1 root element.
+            XElement root = elements.FirstOrDefault();
+            if (root == null)
             {
-                ConformanceLevel = ConformanceLevel.Fragment
-            };
-
-            XElement root;
-
-            using (XmlReader xr = XmlReader.Create(stream, settings))
-            {
-                if (!xr.Read())
-                {
-                    return false;
-                }
-
-                root = XElement.Load(xr.ReadSubtree());
+                return false;
             }
 
             IsPlaceable = true;
@@ -64,7 +51,6 @@
                     foreach (XElement lodElement in child.Elements())
                     {
                         Lod lod = new Lod();
-                        //lod.Distance = Convert.ToInt32(lodElement.Attribute("distance").Value);
 
                         XAttribute fileName = lodElement.Attribute("fileName");
                         if (fileName != null)
@@ -76,6 +62,12 @@
                         if (paletteName != null)
                         {
                             lod.PaletteName = paletteName.Value;
+                        }
+
+                        XAttribute distance = lodElement.Attribute("distance");
+                        if(distance != null)
+                        {
+                            lod.Distance = Convert.ToInt32(distance.Value);
                         }
 
                         Lods.Add(lod);

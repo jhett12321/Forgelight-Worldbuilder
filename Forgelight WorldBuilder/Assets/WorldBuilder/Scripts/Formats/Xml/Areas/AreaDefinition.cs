@@ -1,4 +1,4 @@
-﻿namespace WorldBuilder.Formats.Areas
+﻿namespace WorldBuilder.Formats.Xml.Areas
 {
     using System.Collections.Generic;
     using UnityEngine;
